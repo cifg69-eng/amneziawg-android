@@ -32,61 +32,105 @@
         android:id="@+id/tunnel_list_item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="14dp"
-        android:background="@drawable/cif_tunnel_card_bg"
+        android:background="@android:color/transparent"
         android:descendantFocusability="beforeDescendants"
         android:focusable="true"
-        android:minHeight="92dp"
         android:nextFocusRight="@+id/tunnel_switch"
-        android:paddingStart="18dp"
-        android:paddingTop="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="16dp">
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
         <LinearLayout
-            android:id="@+id/tunnel_info_layout"
-            android:layout_width="wrap_content"
+            android:id="@+id/cif_vpn_card"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_toStartOf="@+id/tunnel_switch"
+            android:background="@drawable/cif_vpn_card_bg"
+            android:gravity="center"
             android:orientation="vertical"
-            android:paddingEnd="16dp">
+            android:paddingStart="22dp"
+            android:paddingTop="28dp"
+            android:paddingEnd="22dp"
+            android:paddingBottom="28dp">
 
             <TextView
-                android:id="@+id/tunnel_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@{key}"
-                android:textColor="#F8FAFC"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                tools:text="amnezia_for_awg" />
+                android:text="@string/smartroute_app_name"
+                android:textColor="#FFFFFF"
+                android:textSize="34sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tunnel_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@{item.connectionStatus == ConnectionStatus.CONNECTED ? @string/tunnel_status_connected : @string/tunnel_status_connecting}"
-                android:textColor="@{item.connectionStatus == ConnectionStatus.CONNECTED ? @color/tunnel_status_connected : @color/tunnel_status_connecting}"
-                android:textSize="15sp"
-                android:visibility="@{item.connectionStatus == ConnectionStatus.DISCONNECTED ? android.view.View.GONE : android.view.View.VISIBLE}"
-                tools:text="Подключено"
-                tools:textColor="@color/tunnel_status_connected" />
-        </LinearLayout>
+                android:layout_marginTop="8dp"
+                android:background="@drawable/cif_vpn_status_pill"
+                android:paddingStart="14dp"
+                android:paddingTop="7dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="7dp"
+                android:text="@{item.state == State.UP ? @string/cif_vpn_connected : @string/cif_vpn_ready}"
+                android:textAllCaps="true"
+                android:textColor="@{item.state == State.UP ? @color/tunnel_status_connected : @color/tunnel_status_connecting}"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="ГОТОВ К ПОДКЛЮЧЕНИЮ" />
 
-        <org.amnezia.awg.widget.ToggleSwitch
-            android:id="@+id/tunnel_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:nextFocusLeft="@+id/tunnel_list_item"
-            app:checked="@{item.state == State.UP}"
-            app:onBeforeCheckedChanged="@{fragment::setTunnelState}"
-            tools:checked="true" />
+            <FrameLayout
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_marginTop="30dp"
+                android:layout_marginBottom="28dp">
+
+                <FrameLayout
+                    android:layout_width="196dp"
+                    android:layout_height="196dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/cif_power_button_bg">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="⏻"
+                        android:textColor="#FFFFFF"
+                        android:textSize="72sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <org.amnezia.awg.widget.ToggleSwitch
+                    android:id="@+id/tunnel_switch"
+                    android:layout_width="220dp"
+                    android:layout_height="220dp"
+                    android:layout_gravity="center"
+                    android:alpha="0.01"
+                    android:nextFocusLeft="@+id/tunnel_list_item"
+                    app:checked="@{item.state == State.UP}"
+                    app:onBeforeCheckedChanged="@{fragment::setTunnelState}"
+                    tools:checked="false" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tunnel_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="@{key}"
+                android:textColor="#E5E7EB"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="cif_vpn" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="@{item.state == State.UP ? @string/cif_vpn_tap_to_disconnect : @string/cif_vpn_tap_to_connect}"
+                android:textColor="#98A2B3"
+                android:textSize="15sp" />
+        </LinearLayout>
     </org.amnezia.awg.widget.MultiselectableRelativeLayout>
 </layout>

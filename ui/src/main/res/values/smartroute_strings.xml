@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="smartroute_app_name" translatable="false">Cif VPN</string>
-    <string name="cif_vpn_engine_badge" translatable="false">Real AmneziaWG Core</string>
-    <string name="cif_vpn_home_title" translatable="false">Cif VPN</string>
-    <string name="cif_vpn_home_subtitle">Чистая оболочка над настоящим AmneziaWG. Без фейковой кнопки: подключение выполняет реальный переключатель туннеля ниже.</string>
-    <string name="cif_vpn_tunnels_title">Туннели</string>
-    <string name="cif_vpn_tunnels_hint">Нажми переключатель справа от конфигурации — это реальное подключение VPN.</string>
-    <string name="cif_vpn_empty_title">Нет конфигураций</string>
-    <string name="cif_vpn_empty_subtitle">Нажми + и импортируй .conf файл AmneziaWG.</string>
+    <string name="cif_vpn_ready">Готов к подключению</string>
+    <string name="cif_vpn_connected">Подключено</string>
+    <string name="cif_vpn_tap_to_connect">Нажмите большую кнопку для подключения</string>
+    <string name="cif_vpn_tap_to_disconnect">Нажмите большую кнопку для отключения</string>
+    <string name="cif_vpn_empty_subtitle">Нажмите + и импортируйте ваш AmneziaWG-конфиг</string>
 </resources>
