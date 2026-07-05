@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="smartroute_app_name" translatable="false">Cif VPN</string>
+    <string name="smartroute_overline">PRIVATE AMNEZIAWG CORE</string>
+    <string name="smartroute_subtitle">Личный защищённый VPN на базе настоящего AmneziaWG-движка.</string>
+    <string name="smartroute_status_ready">ГОТОВ К ПОДКЛЮЧЕНИЮ</string>
+    <string name="smartroute_hint">Импортируй конфиг и управляй туннелем ниже</string>
+    <string name="smartroute_engine_note">Ядро туннеля не изменено: меняем продуктовый слой, внешний вид и удобство.</string>
+</resources>
