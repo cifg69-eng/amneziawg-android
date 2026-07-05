@@ -21,6 +21,8 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.fragment.app.FragmentTransaction
+import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.qrcode.QRCodeReader
@@ -29,6 +31,7 @@ import com.journeyapps.barcodescanner.ScanOptions
 import org.amnezia.awg.Application
 import org.amnezia.awg.R
 import org.amnezia.awg.activity.TunnelCreatorActivity
+import org.amnezia.awg.backend.Tunnel
 import org.amnezia.awg.databinding.ObservableKeyedRecyclerViewAdapter.RowConfigurationHandler
 import org.amnezia.awg.databinding.TunnelListFragmentBinding
 import org.amnezia.awg.databinding.TunnelListItemBinding
@@ -182,6 +185,43 @@ class TunnelListFragment : BaseFragment() {
                     actionModeListener.toggleItemChecked(position)
                     true
                 }
+
+                binding.powerButton.setOnClickListener {
+                    if (actionMode != null) {
+                        actionModeListener.toggleItemChecked(position)
+                        return@setOnClickListener
+                    }
+                    binding.tunnelSwitch.isChecked = item.state != Tunnel.State.UP
+                }
+
+                binding.splitTunnelingButton.setOnClickListener {
+                    if (actionMode != null) {
+                        actionModeListener.toggleItemChecked(position)
+                        return@setOnClickListener
+                    }
+                    selectedTunnel = item
+                    parentFragmentManager.commit {
+                        replace(R.id.detail_container, TunnelEditorFragment())
+                        setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                        addToBackStack(null)
+                    }
+                }
+
+                binding.powerRing.clearAnimation()
+                binding.powerGlow.clearAnimation()
+                if (item.state == Tunnel.State.UP || item.connectionStatus == ObservableTunnel.ConnectionStatus.CONNECTED) {
+                    context?.let {
+                        binding.powerRing.startAnimation(AnimationUtils.loadAnimation(it, R.anim.cif_power_pulse))
+                        binding.powerGlow.startAnimation(AnimationUtils.loadAnimation(it, R.anim.cif_power_glow))
+                    }
+                } else {
+                    binding.powerRing.scaleX = 1f
+                    binding.powerRing.scaleY = 1f
+                    binding.powerRing.alpha = 1f
+                    binding.powerGlow.scaleX = 1f
+                    binding.powerGlow.scaleY = 1f
+                }
+
                 if (actionMode != null)
                     (binding.root as MultiselectableRelativeLayout).setMultiSelected(actionModeListener.checkedItems.contains(position))
                 else

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cif_app_name" translatable="false">Cif VPN</string>
+    <string name="cif_status_connected">Защита включена</string>
+    <string name="cif_status_connecting">Подключение…</string>
+    <string name="cif_status_disconnected">Защита отключена</string>
+    <string name="cif_power_hint_on">Нажми, чтобы отключить</string>
+    <string name="cif_power_hint_off">Нажми, чтобы подключить</string>
+    <string name="cif_split_tunneling">Раздельное туннелирование</string>
+    <string name="cif_split_tunneling_subtitle">Выбор приложений внутри туннеля</string>
+    <string name="cif_tunnel_mode">AmneziaWG tunnel</string>
+    <string name="cif_add_config">Импортировать конфиг</string>
+</resources>
