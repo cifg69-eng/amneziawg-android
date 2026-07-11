@@ -2,11 +2,21 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
+
     <data>
         <import type="org.amnezia.awg.model.ObservableTunnel" />
-        <variable name="fragment" type="org.amnezia.awg.fragment.TunnelListFragment" />
-        <variable name="rowConfigurationHandler" type="org.amnezia.awg.databinding.ObservableKeyedRecyclerViewAdapter.RowConfigurationHandler" />
-        <variable name="tunnels" type="org.amnezia.awg.databinding.ObservableKeyedArrayList&lt;String, ObservableTunnel&gt;" />
+
+        <variable
+            name="fragment"
+            type="org.amnezia.awg.fragment.TunnelListFragment" />
+
+        <variable
+            name="rowConfigurationHandler"
+            type="org.amnezia.awg.databinding.ObservableKeyedRecyclerViewAdapter.RowConfigurationHandler" />
+
+        <variable
+            name="tunnels"
+            type="org.amnezia.awg.databinding.ObservableKeyedArrayList&lt;String, ObservableTunnel&gt;" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -20,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="24dp"
+            android:paddingBottom="96dp"
             android:visibility="@{tunnels.size() > 0 ? android.view.View.VISIBLE : android.view.View.GONE}"
             app:configurationHandler="@{rowConfigurationHandler}"
             app:items="@{tunnels}"
@@ -29,28 +39,56 @@
             tools:listitem="@layout/tunnel_list_item" />
 
         <LinearLayout
+            android:id="@+id/empty_state"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="28dp"
+            android:paddingStart="28dp"
+            android:paddingTop="28dp"
+            android:paddingEnd="28dp"
+            android:paddingBottom="28dp"
             android:visibility="@{tunnels.size() == 0 ? android.view.View.VISIBLE : android.view.View.GONE}">
+
+            <TextView
+                android:layout_width="84dp"
+                android:layout_height="84dp"
+                android:background="@drawable/cif_empty_orb"
+                android:gravity="center"
+                android:text="C"
+                android:textColor="#FFFFFF"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cif VPN"
+                android:layout_marginTop="20dp"
+                android:text="@string/cif_app_name"
                 android:textColor="#FFFFFF"
-                android:textSize="32sp"
+                android:textSize="30sp"
                 android:textStyle="bold" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="10dp"
                 android:gravity="center"
+                android:lineSpacingExtra="3dp"
                 android:text="@string/cif_empty_state_text"
                 android:textColor="#9AACBF"
-                android:textSize="16sp" />
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center"
+                android:text="Нажмите кнопку + внизу, чтобы импортировать конфигурацию"
+                android:textColor="#21E5C5"
+                android:textSize="14sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -58,9 +96,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
-            android:layout_margin="20dp"
+            android:layout_margin="22dp"
             android:contentDescription="@string/cif_add_config"
-            android:visibility="gone"
-            app:srcCompat="@drawable/ic_action_add_white" />
+            android:visibility="visible"
+            app:backgroundTint="#21E5C5"
+            app:elevation="10dp"
+            app:fabCustomSize="64dp"
+            app:rippleColor="#9BFFF0"
+            app:srcCompat="@drawable/ic_action_add_white"
+            app:tint="#04111F" />
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>
