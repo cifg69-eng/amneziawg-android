@@ -12,20 +12,19 @@
     <string name="cif_status_connecting_short">ПОДКЛЮЧЕНИЕ</string>
     <string name="cif_status_off_short">ОТКЛЮЧЕНО</string>
 
-    <string name="cif_button_on">ON</string>
-    <string name="cif_button_off">OFF</string>
-    <string name="cif_button_connecting">…</string>
-    <string name="cif_button_caption">VPN</string>
     <string name="cif_power_hint_on">Нажмите, чтобы отключить</string>
     <string name="cif_power_hint_off">Нажмите, чтобы подключить</string>
-    <string name="cif_power_hint_connecting">Подключаем защищённый туннель…</string>
+    <string name="cif_power_hint_connecting">Создаём защищённый туннель…</string>
 
-    <string name="cif_action_whitelist">Белый список</string>
-    <string name="cif_action_whitelist_subtitle">Банки, MAX, Госуслуги и сервисы мимо VPN</string>
+    <string name="cif_smart_bypass_title">Умный белый список</string>
+    <string name="cif_smart_bypass_subtitle">Банки, Госуслуги, MAX и российские сервисы мимо VPN</string>
+    <string name="cif_smart_bypass_dialog_title">Умный белый список</string>
+    <string name="cif_smart_bypass_message">Найдено приложений: %1$d\nУже работают мимо VPN: %2$d\n\n%3$s\n\nПосле применения выбранные приложения будут реально исключены из Android VPN.</string>
+    <string name="cif_smart_bypass_apply">Применить</string>
+    <string name="cif_smart_bypass_manual">Выбрать вручную</string>
+    <string name="cif_smart_bypass_none">Популярные приложения не найдены. Откройте ручной выбор и отметьте нужные приложения.</string>
+    <string name="cif_smart_bypass_applied">Белый список применён: добавлено %1$d, всего исключено %2$d</string>
+    <string name="cif_smart_bypass_manual_saved">Выбор приложений сохранён и применён</string>
+    <string name="cif_smart_bypass_error">Не удалось применить белый список: %1$s</string>
     <string name="cif_action_import">Импортировать конфигурацию</string>
-
-    <string name="cif_whitelist_dialog_title">Белый список</string>
-    <string name="cif_whitelist_dialog_message">Список популярных российских банков, Госуслуг, MAX/VK, операторов, маркетплейсов и Яндекс-сервисов будет скопирован. В Amnezia откройте: Раздельное туннелирование → “Адреса из списка не должны открываться через VPN” → вставьте список.</string>
-    <string name="cif_whitelist_copy">Скопировать список</string>
-    <string name="cif_whitelist_copied">Белый список скопирован</string>
 </resources>

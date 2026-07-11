@@ -4,9 +4,6 @@
  */
 package org.amnezia.awg.fragment
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
@@ -22,10 +19,10 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.qrcode.QRCodeReader
 import com.journeyapps.barcodescanner.ScanContract
@@ -40,16 +37,19 @@ import org.amnezia.awg.databinding.TunnelListItemBinding
 import org.amnezia.awg.model.ObservableTunnel
 import org.amnezia.awg.util.ErrorMessages
 import org.amnezia.awg.util.QrCodeFromFileScanner
+import org.amnezia.awg.util.SmartBypassManager
 import org.amnezia.awg.util.TunnelImporter
 import org.amnezia.awg.widget.MultiselectableRelativeLayout
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
- * Fragment containing a list of known AmneziaWG tunnels.
- * Cif UI layer does not replace VPN backend: power button still calls BaseFragment.setTunnelState(...).
+ * Main tunnel screen. The custom power view is visual only; switching still goes through
+ * BaseFragment.setTunnelState(), Android VpnService permissions and the existing backend.
  */
 class TunnelListFragment : BaseFragment() {
     private val actionModeListener = ActionModeListener()
@@ -83,7 +83,9 @@ class TunnelListFragment : BaseFragment() {
         val qrCode = result.contents
         val activity = activity
         if (qrCode != null && activity != null) {
-            activity.lifecycleScope.launch { TunnelImporter.importTunnel(parentFragmentManager, qrCode) { showSnackbar(it) } }
+            activity.lifecycleScope.launch {
+                TunnelImporter.importTunnel(parentFragmentManager, qrCode) { showSnackbar(it) }
+            }
         }
     }
 
@@ -97,17 +99,25 @@ class TunnelListFragment : BaseFragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         binding = TunnelListFragmentBinding.inflate(inflater, container, false)
         val bottomSheet = AddTunnelsSheet()
         binding?.apply {
             createFab.setOnClickListener {
-                if (childFragmentManager.findFragmentByTag("BOTTOM_SHEET") != null)
+                if (childFragmentManager.findFragmentByTag(BOTTOM_SHEET_TAG) != null)
                     return@setOnClickListener
-                childFragmentManager.setFragmentResultListener(AddTunnelsSheet.REQUEST_KEY_NEW_TUNNEL, viewLifecycleOwner) { _, bundle ->
+                childFragmentManager.setFragmentResultListener(
+                    AddTunnelsSheet.REQUEST_KEY_NEW_TUNNEL,
+                    viewLifecycleOwner
+                ) { _, bundle ->
                     when (bundle.getString(AddTunnelsSheet.REQUEST_METHOD)) {
-                        AddTunnelsSheet.REQUEST_CREATE -> startActivity(Intent(requireActivity(), TunnelCreatorActivity::class.java))
+                        AddTunnelsSheet.REQUEST_CREATE ->
+                            startActivity(Intent(requireActivity(), TunnelCreatorActivity::class.java))
                         AddTunnelsSheet.REQUEST_IMPORT -> tunnelFileImportResultLauncher.launch("*/*")
                         AddTunnelsSheet.REQUEST_SCAN -> qrImportResultLauncher.launch(
                             ScanOptions()
@@ -117,11 +127,13 @@ class TunnelListFragment : BaseFragment() {
                         )
                     }
                 }
-                bottomSheet.showNow(childFragmentManager, "BOTTOM_SHEET")
+                bottomSheet.showNow(childFragmentManager, BOTTOM_SHEET_TAG)
             }
             executePendingBindings()
         }
-        backPressedCallback = requireActivity().onBackPressedDispatcher.addCallback(this) { actionMode?.finish() }
+        backPressedCallback = requireActivity().onBackPressedDispatcher.addCallback(this) {
+            actionMode?.finish()
+        }
         backPressedCallback?.isEnabled = false
         return binding?.root
     }
@@ -164,10 +176,15 @@ class TunnelListFragment : BaseFragment() {
         binding!!.fragment = this
         lifecycleScope.launch { binding!!.tunnels = Application.getTunnelManager().getTunnels() }
         binding!!.rowConfigurationHandler = object : RowConfigurationHandler<TunnelListItemBinding, ObservableTunnel> {
-            override fun onConfigureRow(binding: TunnelListItemBinding, item: ObservableTunnel, position: Int) {
+            override fun onConfigureRow(
+                binding: TunnelListItemBinding,
+                item: ObservableTunnel,
+                position: Int
+            ) {
                 binding.fragment = this@TunnelListFragment
                 binding.root.setOnClickListener {
-                    if (actionMode == null) selectedTunnel = item else actionModeListener.toggleItemChecked(position)
+                    if (actionMode == null) selectedTunnel = item
+                    else actionModeListener.toggleItemChecked(position)
                 }
                 binding.root.setOnLongClickListener {
                     actionModeListener.toggleItemChecked(position)
@@ -179,15 +196,7 @@ class TunnelListFragment : BaseFragment() {
                         actionModeListener.toggleItemChecked(position)
                         return@setOnClickListener
                     }
-                    binding.powerButton.animate()
-                        .scaleX(0.97f)
-                        .scaleY(0.97f)
-                        .setDuration(80L)
-                        .withEndAction {
-                            binding.powerButton.animate().scaleX(1f).scaleY(1f).setDuration(130L).start()
-                            setTunnelState(binding.root, item.state != Tunnel.State.UP)
-                        }
-                        .start()
+                    setTunnelState(binding.root, item.state != Tunnel.State.UP)
                 }
 
                 binding.whitelistButton.setOnClickListener {
@@ -195,7 +204,7 @@ class TunnelListFragment : BaseFragment() {
                         actionModeListener.toggleItemChecked(position)
                         return@setOnClickListener
                     }
-                    showWhitelistDialog()
+                    showSmartBypassDialog(item)
                 }
 
                 binding.importButton.setOnClickListener {
@@ -206,46 +215,115 @@ class TunnelListFragment : BaseFragment() {
                     this@TunnelListFragment.binding?.createFab?.performClick()
                 }
 
-                if (item.connectionStatus == ObservableTunnel.ConnectionStatus.CONNECTING) {
-                    binding.powerButton.clearAnimation()
-                    context?.let { binding.powerButton.startAnimation(AnimationUtils.loadAnimation(it, R.anim.cif_clean_connecting_pulse)) }
-                } else {
-                    binding.powerButton.clearAnimation()
-                    binding.powerButton.scaleX = 1f
-                    binding.powerButton.scaleY = 1f
-                    binding.powerButton.alpha = 1f
+                if (actionMode != null)
+                    (binding.root as MultiselectableRelativeLayout)
+                        .setMultiSelected(actionModeListener.checkedItems.contains(position))
+                else
+                    (binding.root as MultiselectableRelativeLayout)
+                        .setSingleSelected(selectedTunnel == item)
+            }
+        }
+    }
+
+    private fun showSmartBypassDialog(tunnel: ObservableTunnel) {
+        val activity = activity ?: return
+        lifecycleScope.launch {
+            try {
+                val candidates = withContext(Dispatchers.Default) {
+                    SmartBypassManager.findCandidates(activity)
+                }
+                if (candidates.isEmpty()) {
+                    MaterialAlertDialogBuilder(activity)
+                        .setTitle(R.string.cif_smart_bypass_dialog_title)
+                        .setMessage(R.string.cif_smart_bypass_none)
+                        .setPositiveButton(R.string.cif_smart_bypass_manual) { _, _ ->
+                            openManualAppSelector(tunnel)
+                        }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                    return@launch
                 }
 
-                if (actionMode != null)
-                    (binding.root as MultiselectableRelativeLayout).setMultiSelected(actionModeListener.checkedItems.contains(position))
-                else
-                    (binding.root as MultiselectableRelativeLayout).setSingleSelected(selectedTunnel == item)
+                val config = tunnel.getConfigAsync()
+                val current = config.`interface`.excludedApplications
+                val active = candidates.count { current.contains(it.packageName) }
+                val names = candidates.take(12).joinToString(separator = "\n") { "• ${it.label}" } +
+                    if (candidates.size > 12) "\n• …и ещё ${candidates.size - 12}" else ""
+
+                MaterialAlertDialogBuilder(activity)
+                    .setTitle(R.string.cif_smart_bypass_dialog_title)
+                    .setMessage(getString(R.string.cif_smart_bypass_message, candidates.size, active, names))
+                    .setPositiveButton(R.string.cif_smart_bypass_apply) { _, _ ->
+                        applySmartBypass(tunnel, candidates.map { it.packageName })
+                    }
+                    .setNeutralButton(R.string.cif_smart_bypass_manual) { _, _ ->
+                        openManualAppSelector(tunnel)
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            } catch (e: Throwable) {
+                showSmartBypassError(e)
             }
         }
     }
 
-    private fun showWhitelistDialog() {
-        val activity = activity ?: return
-        val domains = readWhitelistDomains(activity)
-        AlertDialog.Builder(activity)
-            .setTitle(R.string.cif_whitelist_dialog_title)
-            .setMessage(R.string.cif_whitelist_dialog_message)
-            .setPositiveButton(R.string.cif_whitelist_copy) { _, _ ->
-                val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("Cif VPN whitelist", domains))
-                showSnackbar(getString(R.string.cif_whitelist_copied))
+    private fun applySmartBypass(tunnel: ObservableTunnel, packages: Collection<String>) {
+        lifecycleScope.launch {
+            try {
+                val result = SmartBypassManager.applyPreset(tunnel, packages)
+                showSnackbar(
+                    getString(
+                        R.string.cif_smart_bypass_applied,
+                        result.added,
+                        result.totalExcluded
+                    )
+                )
+            } catch (e: Throwable) {
+                showSmartBypassError(e)
             }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        }
     }
 
-    private fun readWhitelistDomains(context: Context): String {
-        return try {
-            context.assets.open("cif_bypass_domains_ru.txt").bufferedReader().use { it.readText().trim() }
-        } catch (e: Throwable) {
-            Log.e(TAG, "Unable to read whitelist asset", e)
-            DEFAULT_BYPASS_DOMAINS
+    private fun openManualAppSelector(tunnel: ObservableTunnel) {
+        lifecycleScope.launch {
+            try {
+                val config = tunnel.getConfigAsync()
+                val excluded = ArrayList<String?>()
+                excluded.addAll(config.`interface`.excludedApplications)
+                val selector = AppListDialogFragment.newInstance(excluded, true)
+
+                childFragmentManager.setFragmentResultListener(
+                    AppListDialogFragment.REQUEST_SELECTION,
+                    viewLifecycleOwner
+                ) { _, bundle ->
+                    val selected = bundle.getStringArray(AppListDialogFragment.KEY_SELECTED_APPS)
+                        ?.toList()
+                        .orEmpty()
+                    val excludedMode = bundle.getBoolean(AppListDialogFragment.KEY_IS_EXCLUDED, true)
+                    lifecycleScope.launch {
+                        try {
+                            SmartBypassManager.saveManualSelection(
+                                tunnel,
+                                selected,
+                                excludedMode
+                            )
+                            showSnackbar(getString(R.string.cif_smart_bypass_manual_saved))
+                        } catch (e: Throwable) {
+                            showSmartBypassError(e)
+                        }
+                    }
+                }
+                selector.show(childFragmentManager, APP_SELECTOR_TAG)
+            } catch (e: Throwable) {
+                showSmartBypassError(e)
+            }
         }
+    }
+
+    private fun showSmartBypassError(throwable: Throwable) {
+        val error = ErrorMessages[throwable]
+        Log.e(TAG, "Smart bypass failed", throwable)
+        showSnackbar(getString(R.string.cif_smart_bypass_error, error))
     }
 
     private fun showSnackbar(message: CharSequence) {
@@ -258,8 +336,13 @@ class TunnelListFragment : BaseFragment() {
             Toast.makeText(activity ?: Application.get(), message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun viewForTunnel(tunnel: ObservableTunnel, tunnels: List<*>): MultiselectableRelativeLayout? {
-        return binding?.tunnelList?.findViewHolderForAdapterPosition(tunnels.indexOf(tunnel))?.itemView as? MultiselectableRelativeLayout
+    private fun viewForTunnel(
+        tunnel: ObservableTunnel,
+        tunnels: List<*>
+    ): MultiselectableRelativeLayout? {
+        return binding?.tunnelList
+            ?.findViewHolderForAdapterPosition(tunnels.indexOf(tunnel))
+            ?.itemView as? MultiselectableRelativeLayout
     }
 
     private inner class ActionModeListener : ActionMode.Callback {
@@ -283,7 +366,9 @@ class TunnelListFragment : BaseFragment() {
                             val tunnels = Application.getTunnelManager().getTunnels()
                             val tunnelsToDelete = ArrayList<ObservableTunnel>()
                             for (position in copyCheckedItems) tunnelsToDelete.add(tunnels[position])
-                            val futures = tunnelsToDelete.map { async(SupervisorJob()) { it.deleteAsync() } }
+                            val futures = tunnelsToDelete.map {
+                                async(SupervisorJob()) { it.deleteAsync() }
+                            }
                             onTunnelDeletionFinished(futures.awaitAll().size, null)
                         } catch (e: Throwable) {
                             onTunnelDeletionFinished(0, e)
@@ -348,16 +433,24 @@ class TunnelListFragment : BaseFragment() {
         private fun updateTitle(mode: ActionMode?) {
             if (mode == null) return
             val count = checkedItems.size
-            mode.title = if (count == 0) "" else resources!!.getQuantityString(R.plurals.delete_title, count, count)
+            mode.title = if (count == 0) ""
+            else resources!!.getQuantityString(R.plurals.delete_title, count, count)
         }
 
         private fun animateFab(view: View?, show: Boolean) {
             view ?: return
-            val animation = AnimationUtils.loadAnimation(context, if (show) R.anim.scale_up else R.anim.scale_down)
+            val animation = AnimationUtils.loadAnimation(
+                context,
+                if (show) R.anim.scale_up else R.anim.scale_down
+            )
             animation.setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationRepeat(animation: Animation?) {}
-                override fun onAnimationEnd(animation: Animation?) { if (!show) view.visibility = View.GONE }
-                override fun onAnimationStart(animation: Animation?) { if (show) view.visibility = View.VISIBLE }
+                override fun onAnimationRepeat(animation: Animation?) = Unit
+                override fun onAnimationEnd(animation: Animation?) {
+                    if (!show) view.visibility = View.GONE
+                }
+                override fun onAnimationStart(animation: Animation?) {
+                    if (show) view.visibility = View.VISIBLE
+                }
             })
             view.startAnimation(animation)
         }
@@ -366,6 +459,7 @@ class TunnelListFragment : BaseFragment() {
     companion object {
         private const val CHECKED_ITEMS = "CHECKED_ITEMS"
         private const val TAG = "AmneziaWG/TunnelListFragment"
-        private const val DEFAULT_BYPASS_DOMAINS = "sber.ru\ntbank.ru\nvtb.ru\nalfabank.ru\ngosuslugi.ru\nmax.ru\nvk.com\nozon.ru\nyandex.ru"
+        private const val BOTTOM_SHEET_TAG = "BOTTOM_SHEET"
+        private const val APP_SELECTOR_TAG = "CIF_APP_SELECTOR"
     }
 }
