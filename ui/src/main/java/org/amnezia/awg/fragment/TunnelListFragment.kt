@@ -150,14 +150,6 @@ class TunnelListFragment : BaseFragment() {
                             actionModeListener.toggleItemChecked(position)
                         }
                     }
-                    row.dashboardView.onHeaderSettingsClick = {
-                        if (actionMode == null) {
-                            showAccentPicker(row.dashboardView)
-                        } else {
-                            actionModeListener.toggleItemChecked(position)
-                        }
-                    }
-
                     row.dashboardView.onPowerClick = {
                         if (actionMode != null) {
                             actionModeListener.toggleItemChecked(position)
@@ -208,8 +200,6 @@ class TunnelListFragment : BaseFragment() {
     private fun startDashboardUpdates(view: CifVpnDashboardView, item: ObservableTunnel) {
         dashboardJobs.remove(item.name)?.cancel()
         dashboardJobs[item.name] = viewLifecycleOwner.lifecycleScope.launch {
-            var lastBytes = 0L
-            var lastAt = SystemClock.elapsedRealtime()
             while (isActive) {
                 val now = SystemClock.elapsedRealtime()
                 val isUp = item.state == Tunnel.State.UP
@@ -222,25 +212,6 @@ class TunnelListFragment : BaseFragment() {
 
                 if (isUp && sessionStartedAt[item.name] == null) sessionStartedAt[item.name] = now
                 if (!isUp) sessionStartedAt.remove(item.name)
-
-                var speed = 0.0
-                if (isUp) {
-                    try {
-                        val stats = item.getStatisticsAsync()
-                        val bytes = stats.totalRx() + stats.totalTx()
-                        val elapsedMs = (now - lastAt).coerceAtLeast(1L)
-                        if (lastBytes > 0L && bytes >= lastBytes) {
-                            speed = (bytes - lastBytes).toDouble() * 8.0 / elapsedMs.toDouble() / 1000.0
-                        }
-                        lastBytes = bytes
-                        lastAt = now
-                    } catch (e: Throwable) {
-                        Log.d(TAG, "Statistics update skipped", e)
-                    }
-                } else {
-                    lastBytes = 0L
-                    lastAt = now
-                }
 
                 val bypassCount = try {
                     item.getConfigAsync().`interface`.excludedApplications.size
@@ -255,7 +226,6 @@ class TunnelListFragment : BaseFragment() {
                 view.update(
                     uiState = uiState,
                     profile = item.name,
-                    speed = speed,
                     elapsedSeconds = sessionStartedAt[item.name]?.let { (now - it) / 1000L } ?: 0L,
                     bypassCount = bypassCount,
                     accent = accent

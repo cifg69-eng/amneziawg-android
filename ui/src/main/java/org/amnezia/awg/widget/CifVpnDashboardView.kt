@@ -22,7 +22,6 @@ class CifVpnDashboardView @JvmOverloads constructor(
 
     var onPowerClick: (() -> Unit)? = null
     var onMenuClick: (() -> Unit)? = null
-    var onHeaderSettingsClick: (() -> Unit)? = null
     var onWhitelistClick: (() -> Unit)? = null
     var onImportClick: (() -> Unit)? = null
     var onSettingsClick: (() -> Unit)? = null
@@ -40,13 +39,11 @@ class CifVpnDashboardView @JvmOverloads constructor(
 
     private var state = UiState.OFF
     private var profileName = "Cif VPN"
-    private var speedMbps = 0.0
     private var sessionSeconds = 0L
     private var whitelistCount = 0
     private var accentColor = Color.rgb(33, 229, 197)
 
     private val headerMenuRect = RectF()
-    private val headerSettingsRect = RectF()
     private val powerRect = RectF()
     private val whitelistRect = RectF()
     private val importRect = RectF()
@@ -72,14 +69,12 @@ class CifVpnDashboardView @JvmOverloads constructor(
     fun update(
         uiState: UiState,
         profile: String,
-        speed: Double,
         elapsedSeconds: Long,
         bypassCount: Int,
         accent: Int
     ) {
         state = uiState
         profileName = profile
-        speedMbps = speed.coerceAtLeast(0.0)
         sessionSeconds = elapsedSeconds.coerceAtLeast(0)
         whitelistCount = bypassCount.coerceAtLeast(0)
         accentColor = accent
@@ -105,7 +100,7 @@ class CifVpnDashboardView @JvmOverloads constructor(
         val measuredWidth = MeasureSpec.getSize(widthMeasureSpec).takeIf { it > 0 }
             ?: resources.displayMetrics.widthPixels
         val circleSize = min(measuredWidth.toFloat() - dp(76f), dp(310f)).coerceAtLeast(dp(220f))
-        val desiredHeight = (dp(20f + 58f + 105f + 20f + 94f + 126f + 80f + 30f) + circleSize).toInt()
+        val desiredHeight = (dp(20f + 58f + 105f + 20f + 94f + 126f + 30f) + circleSize).toInt()
         val width = resolveSize(measuredWidth, widthMeasureSpec)
         val height = when (MeasureSpec.getMode(heightMeasureSpec)) {
             MeasureSpec.EXACTLY -> maxOf(MeasureSpec.getSize(heightMeasureSpec), desiredHeight)
@@ -151,7 +146,6 @@ class CifVpnDashboardView @JvmOverloads constructor(
         drawActionCard(canvas, settingsRect, ActionIcon.SLIDERS, "Настройки", "Цвет интерфейса")
         y += dp(126f)
 
-        drawSpeedCard(canvas, side, y, w - side, min(y + dp(80f), h - dp(12f)))
     }
 
     private fun drawBackground(canvas: Canvas, w: Float, h: Float) {
@@ -164,7 +158,6 @@ class CifVpnDashboardView @JvmOverloads constructor(
 
     private fun drawHeader(canvas: Canvas, left: Float, top: Float, right: Float) {
         headerMenuRect.set(left - dp(10f), top - dp(8f), left + dp(46f), top + dp(50f))
-        headerSettingsRect.set(right - dp(58f), top - dp(8f), right + dp(8f), top + dp(52f))
 
         paint.color = Color.rgb(139, 159, 185)
         paint.strokeWidth = dp(2.3f)
@@ -178,7 +171,6 @@ class CifVpnDashboardView @JvmOverloads constructor(
         paint.color = accentColor
         canvas.drawText("VPN", width / 2f + dp(34f), top + dp(31f), paint)
 
-        drawSlidersIcon(canvas, right - dp(20f), top + dp(22f), dp(22f), Color.rgb(137, 158, 187))
     }
 
     private fun drawStatusCard(canvas: Canvas, left: Float, top: Float, right: Float, bottom: Float) {
@@ -314,35 +306,6 @@ class CifVpnDashboardView @JvmOverloads constructor(
         canvas.drawText(subtitle, cx, rect.top + dp(90f), paint)
     }
 
-    private fun drawSpeedCard(canvas: Canvas, left: Float, top: Float, right: Float, bottom: Float) {
-        if (bottom <= top) return
-        val rect = RectF(left, top, right, bottom)
-        drawGlassCard(canvas, rect, dp(19f))
-        drawRocketIcon(canvas, left + dp(30f), top + dp(29f), Color.rgb(142, 164, 195))
-
-        paint.textAlign = Paint.Align.LEFT
-        paint.typeface = Typeface.DEFAULT
-        paint.textSize = sp(13f)
-        paint.color = Color.rgb(145, 162, 187)
-        canvas.drawText("Скорость соединения", left + dp(54f), top + dp(31f), paint)
-
-        paint.textAlign = Paint.Align.RIGHT
-        paint.typeface = Typeface.DEFAULT_BOLD
-        paint.textSize = sp(15f)
-        paint.color = accentColor
-        canvas.drawText(String.format("%.1f Mbps", speedMbps), right - dp(18f), top + dp(31f), paint)
-
-        val barLeft = left + dp(54f)
-        val barRight = right - dp(18f)
-        val barY = bottom - dp(17f)
-        stroke.strokeWidth = dp(3f)
-        stroke.color = Color.rgb(28, 48, 66)
-        canvas.drawLine(barLeft, barY, barRight, barY, stroke)
-        stroke.color = accentColor
-        val progress = (speedMbps / 100.0).coerceIn(0.04, 1.0).toFloat()
-        canvas.drawLine(barLeft, barY, barLeft + (barRight - barLeft) * progress, barY, stroke)
-    }
-
     private fun drawGlassCard(canvas: Canvas, rect: RectF, radius: Float) {
         paint.shader = LinearGradient(rect.left, rect.top, rect.right, rect.bottom,
             Color.rgb(12, 31, 48), Color.rgb(7, 22, 36), Shader.TileMode.CLAMP)
@@ -417,18 +380,6 @@ class CifVpnDashboardView @JvmOverloads constructor(
         }
     }
 
-    private fun drawRocketIcon(canvas: Canvas, cx: Float, cy: Float, color: Int) {
-        paint.color = color
-        val p = Path()
-        p.moveTo(cx - dp(7f), cy + dp(7f))
-        p.quadTo(cx - dp(3f), cy - dp(10f), cx + dp(10f), cy - dp(12f))
-        p.quadTo(cx + dp(10f), cy + dp(2f), cx - dp(7f), cy + dp(7f))
-        p.close()
-        canvas.drawPath(p, paint)
-        paint.color = Color.rgb(8, 25, 39)
-        canvas.drawCircle(cx + dp(3f), cy - dp(5f), dp(2.7f), paint)
-    }
-
     private fun drawSwirlIcon(canvas: Canvas, cx: Float, cy: Float, r: Float, color: Int) {
         stroke.strokeWidth = dp(4f)
         stroke.color = color
@@ -449,7 +400,6 @@ class CifVpnDashboardView @JvmOverloads constructor(
                 val y = event.y
                 when {
                     headerMenuRect.contains(x, y) -> onMenuClick?.invoke()
-                    headerSettingsRect.contains(x, y) -> onHeaderSettingsClick?.invoke()
                     powerRect.contains(x, y) -> onPowerClick?.invoke()
                     whitelistRect.contains(x, y) -> onWhitelistClick?.invoke()
                     importRect.contains(x, y) -> onImportClick?.invoke()

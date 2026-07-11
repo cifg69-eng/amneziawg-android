@@ -10,7 +10,7 @@
     <org.amnezia.awg.widget.MultiselectableRelativeLayout
         android:id="@+id/tunnel_list_item"
         android:layout_width="match_parent"
-        android:layout_height="860dp"
+        android:layout_height="770dp"
         android:background="@android:color/transparent"
         android:focusable="true">
 
