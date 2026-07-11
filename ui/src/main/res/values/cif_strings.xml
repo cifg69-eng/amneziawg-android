@@ -1,23 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="cif_app_name" translatable="false">Cif VPN</string>
+    <string name="cif_empty_state_text">Импортируйте VPN-конфигурацию, чтобы включить защищённое соединение.</string>
+    <string name="cif_add_config">Добавить или импортировать конфигурацию</string>
+
+    <string name="cif_profile_title">Текущий профиль</string>
     <string name="cif_status_connected">VPN включён. Соединение защищено.</string>
     <string name="cif_status_connecting">Подключение…</string>
-    <string name="cif_status_disconnected">VPN выключен. Нажмите кнопку подключения.</string>
-    <string name="cif_status_connected_short">Защищено</string>
-    <string name="cif_status_connecting_short">Подключение</string>
-    <string name="cif_status_off_short">Отключено</string>
+    <string name="cif_status_disconnected">VPN выключен. Трафик идёт напрямую.</string>
+    <string name="cif_status_connected_short">ЗАЩИЩЕНО</string>
+    <string name="cif_status_connecting_short">ПОДКЛЮЧЕНИЕ</string>
+    <string name="cif_status_off_short">ОТКЛЮЧЕНО</string>
+
     <string name="cif_button_on">ON</string>
     <string name="cif_button_off">OFF</string>
-    <string name="cif_button_connecting">•••</string>
+    <string name="cif_button_connecting">…</string>
     <string name="cif_button_caption">VPN</string>
-    <string name="cif_power_hint_on">Нажмите, чтобы отключить VPN</string>
-    <string name="cif_power_hint_off">Нажмите, чтобы подключить VPN</string>
-    <string name="cif_power_hint_connecting">Создаём защищённый туннель…</string>
-    <string name="cif_action_diagnostics">Диагностика</string>
-    <string name="cif_action_diagnostics_subtitle">Логи и ошибки</string>
-    <string name="cif_action_exclusions">Исключения</string>
-    <string name="cif_action_exclusions_subtitle">Приложения и сайты</string>
-    <string name="cif_add_config">Добавить или импортировать конфигурацию</string>
-    <string name="cif_empty_state_text">Импортируйте VPN-конфигурацию, чтобы включить защищённый туннель.</string>
+    <string name="cif_power_hint_on">Нажмите, чтобы отключить</string>
+    <string name="cif_power_hint_off">Нажмите, чтобы подключить</string>
+    <string name="cif_power_hint_connecting">Подключаем защищённый туннель…</string>
+
+    <string name="cif_action_whitelist">Белый список</string>
+    <string name="cif_action_whitelist_subtitle">Банки, MAX, Госуслуги и сервисы мимо VPN</string>
+    <string name="cif_action_import">Импортировать конфигурацию</string>
+
+    <string name="cif_whitelist_dialog_title">Белый список</string>
+    <string name="cif_whitelist_dialog_message">Список популярных российских банков, Госуслуг, MAX/VK, операторов, маркетплейсов и Яндекс-сервисов будет скопирован. В Amnezia откройте: Раздельное туннелирование → “Адреса из списка не должны открываться через VPN” → вставьте список.</string>
+    <string name="cif_whitelist_copy">Скопировать список</string>
+    <string name="cif_whitelist_copied">Белый список скопирован</string>
 </resources>

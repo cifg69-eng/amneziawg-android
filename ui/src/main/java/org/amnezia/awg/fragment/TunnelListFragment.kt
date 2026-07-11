@@ -4,6 +4,9 @@
  */
 package org.amnezia.awg.fragment
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
@@ -19,10 +22,9 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
-import androidx.fragment.app.FragmentTransaction
-import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.qrcode.QRCodeReader
@@ -47,11 +49,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Fragment containing a list of known AmneziaWG tunnels.
- *
- * Cif VPN UI layer:
- * - the central button is visual UI only;
- * - the click still calls BaseFragment.setTunnelState(...);
- * - VPN engine, Android permissions, imports and backend are not replaced.
+ * Cif UI layer does not replace VPN backend: power button still calls BaseFragment.setTunnelState(...).
  */
 class TunnelListFragment : BaseFragment() {
     private val actionModeListener = ActionModeListener()
@@ -63,7 +61,6 @@ class TunnelListFragment : BaseFragment() {
         if (data == null) return@registerForActivityResult
         val activity = activity ?: return@registerForActivityResult
         val contentResolver = activity.contentResolver ?: return@registerForActivityResult
-
         activity.lifecycleScope.launch {
             if (QrCodeFromFileScanner.validContentType(contentResolver, data)) {
                 try {
@@ -86,9 +83,7 @@ class TunnelListFragment : BaseFragment() {
         val qrCode = result.contents
         val activity = activity
         if (qrCode != null && activity != null) {
-            activity.lifecycleScope.launch {
-                TunnelImporter.importTunnel(parentFragmentManager, qrCode) { showSnackbar(it) }
-            }
+            activity.lifecycleScope.launch { TunnelImporter.importTunnel(parentFragmentManager, qrCode) { showSnackbar(it) } }
         }
     }
 
@@ -102,56 +97,32 @@ class TunnelListFragment : BaseFragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         binding = TunnelListFragmentBinding.inflate(inflater, container, false)
         val bottomSheet = AddTunnelsSheet()
-
         binding?.apply {
             createFab.setOnClickListener {
-                if (childFragmentManager.findFragmentByTag("BOTTOM_SHEET") != null) {
+                if (childFragmentManager.findFragmentByTag("BOTTOM_SHEET") != null)
                     return@setOnClickListener
-                }
-
-                childFragmentManager.setFragmentResultListener(
-                    AddTunnelsSheet.REQUEST_KEY_NEW_TUNNEL,
-                    viewLifecycleOwner
-                ) { _, bundle ->
+                childFragmentManager.setFragmentResultListener(AddTunnelsSheet.REQUEST_KEY_NEW_TUNNEL, viewLifecycleOwner) { _, bundle ->
                     when (bundle.getString(AddTunnelsSheet.REQUEST_METHOD)) {
-                        AddTunnelsSheet.REQUEST_CREATE -> {
-                            startActivity(Intent(requireActivity(), TunnelCreatorActivity::class.java))
-                        }
-
-                        AddTunnelsSheet.REQUEST_IMPORT -> {
-                            tunnelFileImportResultLauncher.launch("*/*")
-                        }
-
-                        AddTunnelsSheet.REQUEST_SCAN -> {
-                            qrImportResultLauncher.launch(
-                                ScanOptions()
-                                    .setOrientationLocked(false)
-                                    .setBeepEnabled(false)
-                                    .setPrompt(getString(R.string.qr_code_hint))
-                            )
-                        }
+                        AddTunnelsSheet.REQUEST_CREATE -> startActivity(Intent(requireActivity(), TunnelCreatorActivity::class.java))
+                        AddTunnelsSheet.REQUEST_IMPORT -> tunnelFileImportResultLauncher.launch("*/*")
+                        AddTunnelsSheet.REQUEST_SCAN -> qrImportResultLauncher.launch(
+                            ScanOptions()
+                                .setOrientationLocked(false)
+                                .setBeepEnabled(false)
+                                .setPrompt(getString(R.string.qr_code_hint))
+                        )
                     }
                 }
-
                 bottomSheet.showNow(childFragmentManager, "BOTTOM_SHEET")
             }
-
             executePendingBindings()
         }
-
-        backPressedCallback = requireActivity().onBackPressedDispatcher.addCallback(this) {
-            actionMode?.finish()
-        }
+        backPressedCallback = requireActivity().onBackPressedDispatcher.addCallback(this) { actionMode?.finish() }
         backPressedCallback?.isEnabled = false
-
         return binding?.root
     }
 
@@ -175,14 +146,14 @@ class TunnelListFragment : BaseFragment() {
     }
 
     private fun onTunnelDeletionFinished(count: Int, throwable: Throwable?) {
-        val message: String
         val ctx = activity ?: Application.get()
-        if (throwable == null) {
-            message = ctx.resources.getQuantityString(R.plurals.delete_success, count, count)
+        val message = if (throwable == null) {
+            ctx.resources.getQuantityString(R.plurals.delete_success, count, count)
         } else {
             val error = ErrorMessages[throwable]
-            message = ctx.resources.getQuantityString(R.plurals.delete_error, count, count, error)
-            Log.e(TAG, message, throwable)
+            val errorMessage = ctx.resources.getQuantityString(R.plurals.delete_error, count, count, error)
+            Log.e(TAG, errorMessage, throwable)
+            errorMessage
         }
         showSnackbar(message)
     }
@@ -190,24 +161,14 @@ class TunnelListFragment : BaseFragment() {
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
         binding ?: return
-
         binding!!.fragment = this
-        lifecycleScope.launch {
-            binding!!.tunnels = Application.getTunnelManager().getTunnels()
-        }
-
+        lifecycleScope.launch { binding!!.tunnels = Application.getTunnelManager().getTunnels() }
         binding!!.rowConfigurationHandler = object : RowConfigurationHandler<TunnelListItemBinding, ObservableTunnel> {
             override fun onConfigureRow(binding: TunnelListItemBinding, item: ObservableTunnel, position: Int) {
                 binding.fragment = this@TunnelListFragment
-
                 binding.root.setOnClickListener {
-                    if (actionMode == null) {
-                        selectedTunnel = item
-                    } else {
-                        actionModeListener.toggleItemChecked(position)
-                    }
+                    if (actionMode == null) selectedTunnel = item else actionModeListener.toggleItemChecked(position)
                 }
-
                 binding.root.setOnLongClickListener {
                     actionModeListener.toggleItemChecked(position)
                     true
@@ -218,90 +179,83 @@ class TunnelListFragment : BaseFragment() {
                         actionModeListener.toggleItemChecked(position)
                         return@setOnClickListener
                     }
-
                     binding.powerButton.animate()
-                        .scaleX(0.96f)
-                        .scaleY(0.96f)
-                        .setDuration(70L)
+                        .scaleX(0.97f)
+                        .scaleY(0.97f)
+                        .setDuration(80L)
                         .withEndAction {
-                            binding.powerButton.animate()
-                                .scaleX(1f)
-                                .scaleY(1f)
-                                .setDuration(140L)
-                                .start()
-
-                            // Real VPN logic from BaseFragment. No fake state, no engine rewrite.
+                            binding.powerButton.animate().scaleX(1f).scaleY(1f).setDuration(130L).start()
                             setTunnelState(binding.root, item.state != Tunnel.State.UP)
                         }
                         .start()
                 }
 
-                binding.diagnosticsButton.setOnClickListener {
+                binding.whitelistButton.setOnClickListener {
                     if (actionMode != null) {
                         actionModeListener.toggleItemChecked(position)
                         return@setOnClickListener
                     }
-
-                    showSnackbar(getString(R.string.cif_action_diagnostics_subtitle))
+                    showWhitelistDialog()
                 }
 
-                binding.splitTunnelingButton.setOnClickListener {
+                binding.importButton.setOnClickListener {
                     if (actionMode != null) {
                         actionModeListener.toggleItemChecked(position)
                         return@setOnClickListener
                     }
-
-                    selectedTunnel = item
-                    parentFragmentManager.commit {
-                        replace(R.id.detail_container, TunnelEditorFragment())
-                        setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                        addToBackStack(null)
-                    }
+                    this@TunnelListFragment.binding?.createFab?.performClick()
                 }
-
-                binding.powerRing.clearAnimation()
-                binding.powerGlow.clearAnimation()
 
                 if (item.connectionStatus == ObservableTunnel.ConnectionStatus.CONNECTING) {
-                    context?.let {
-                        binding.powerRing.startAnimation(AnimationUtils.loadAnimation(it, R.anim.cif_power_rotate))
-                        binding.powerGlow.startAnimation(AnimationUtils.loadAnimation(it, R.anim.cif_power_breathe))
-                    }
-                } else if (item.state == Tunnel.State.UP || item.connectionStatus == ObservableTunnel.ConnectionStatus.CONNECTED) {
-                    context?.let {
-                        binding.powerRing.startAnimation(AnimationUtils.loadAnimation(it, R.anim.cif_power_pulse))
-                        binding.powerGlow.startAnimation(AnimationUtils.loadAnimation(it, R.anim.cif_power_breathe))
-                    }
+                    binding.powerButton.clearAnimation()
+                    context?.let { binding.powerButton.startAnimation(AnimationUtils.loadAnimation(it, R.anim.cif_clean_connecting_pulse)) }
                 } else {
-                    binding.powerRing.scaleX = 1f
-                    binding.powerRing.scaleY = 1f
-                    binding.powerRing.alpha = 1f
-                    binding.powerRing.rotation = 0f
-                    binding.powerGlow.scaleX = 1f
-                    binding.powerGlow.scaleY = 1f
-                    binding.powerGlow.alpha = 1f
+                    binding.powerButton.clearAnimation()
+                    binding.powerButton.scaleX = 1f
+                    binding.powerButton.scaleY = 1f
+                    binding.powerButton.alpha = 1f
                 }
 
-                if (actionMode != null) {
-                    (binding.root as MultiselectableRelativeLayout)
-                        .setMultiSelected(actionModeListener.checkedItems.contains(position))
-                } else {
-                    (binding.root as MultiselectableRelativeLayout)
-                        .setSingleSelected(selectedTunnel == item)
-                }
+                if (actionMode != null)
+                    (binding.root as MultiselectableRelativeLayout).setMultiSelected(actionModeListener.checkedItems.contains(position))
+                else
+                    (binding.root as MultiselectableRelativeLayout).setSingleSelected(selectedTunnel == item)
             }
+        }
+    }
+
+    private fun showWhitelistDialog() {
+        val activity = activity ?: return
+        val domains = readWhitelistDomains(activity)
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.cif_whitelist_dialog_title)
+            .setMessage(R.string.cif_whitelist_dialog_message)
+            .setPositiveButton(R.string.cif_whitelist_copy) { _, _ ->
+                val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Cif VPN whitelist", domains))
+                showSnackbar(getString(R.string.cif_whitelist_copied))
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun readWhitelistDomains(context: Context): String {
+        return try {
+            context.assets.open("cif_bypass_domains_ru.txt").bufferedReader().use { it.readText().trim() }
+        } catch (e: Throwable) {
+            Log.e(TAG, "Unable to read whitelist asset", e)
+            DEFAULT_BYPASS_DOMAINS
         }
     }
 
     private fun showSnackbar(message: CharSequence) {
         val binding = binding
-        if (binding != null) {
+        if (binding != null)
             Snackbar.make(binding.mainContainer, message, Snackbar.LENGTH_LONG)
                 .setAnchorView(binding.createFab)
                 .show()
-        } else {
+        else
             Toast.makeText(activity ?: Application.get(), message, Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun viewForTunnel(tunnel: ObservableTunnel, tunnels: List<*>): MultiselectableRelativeLayout? {
@@ -312,9 +266,7 @@ class TunnelListFragment : BaseFragment() {
         val checkedItems: MutableCollection<Int> = HashSet()
         private var resources: Resources? = null
 
-        fun getCheckedItems(): ArrayList<Int> {
-            return ArrayList(checkedItems)
-        }
+        fun getCheckedItems(): ArrayList<Int> = ArrayList(checkedItems)
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {
@@ -326,7 +278,6 @@ class TunnelListFragment : BaseFragment() {
                         scaleX = 1f
                         scaleY = 1f
                     }
-
                     activity.lifecycleScope.launch {
                         try {
                             val tunnels = Application.getTunnelManager().getTunnels()
@@ -338,7 +289,6 @@ class TunnelListFragment : BaseFragment() {
                             onTunnelDeletionFinished(0, e)
                         }
                     }
-
                     checkedItems.clear()
                     mode.finish()
                     true
@@ -347,9 +297,7 @@ class TunnelListFragment : BaseFragment() {
                 R.id.menu_action_select_all -> {
                     lifecycleScope.launch {
                         val tunnels = Application.getTunnelManager().getTunnels()
-                        for (i in 0 until tunnels.size) {
-                            setItemChecked(i, true)
-                        }
+                        for (i in 0 until tunnels.size) setItemChecked(i, true)
                     }
                     true
                 }
@@ -361,9 +309,7 @@ class TunnelListFragment : BaseFragment() {
         override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
             actionMode = mode
             backPressedCallback?.isEnabled = true
-            if (activity != null) {
-                resources = activity!!.resources
-            }
+            if (activity != null) resources = activity!!.resources
             animateFab(binding?.createFab, false)
             mode.menuInflater.inflate(R.menu.tunnel_list_action_mode, menu)
             binding?.tunnelList?.adapter?.notifyDataSetChanged()
@@ -385,19 +331,12 @@ class TunnelListFragment : BaseFragment() {
         }
 
         fun setItemChecked(position: Int, checked: Boolean) {
-            if (checked) {
-                checkedItems.add(position)
-            } else {
-                checkedItems.remove(position)
-            }
-
+            if (checked) checkedItems.add(position) else checkedItems.remove(position)
             val adapter = if (binding == null) null else binding!!.tunnelList.adapter
-            if (actionMode == null && checkedItems.isNotEmpty() && activity != null) {
+            if (actionMode == null && checkedItems.isNotEmpty() && activity != null)
                 (activity as AppCompatActivity).startSupportActionMode(this)
-            } else if (actionMode != null && checkedItems.isEmpty()) {
+            else if (actionMode != null && checkedItems.isEmpty())
                 actionMode!!.finish()
-            }
-
             adapter?.notifyItemChanged(position)
             updateTitle(actionMode)
         }
@@ -408,31 +347,17 @@ class TunnelListFragment : BaseFragment() {
 
         private fun updateTitle(mode: ActionMode?) {
             if (mode == null) return
-
             val count = checkedItems.size
-            mode.title = if (count == 0) {
-                ""
-            } else {
-                resources!!.getQuantityString(R.plurals.delete_title, count, count)
-            }
+            mode.title = if (count == 0) "" else resources!!.getQuantityString(R.plurals.delete_title, count, count)
         }
 
         private fun animateFab(view: View?, show: Boolean) {
             view ?: return
-            val animation = AnimationUtils.loadAnimation(
-                context, if (show) R.anim.scale_up else R.anim.scale_down
-            )
+            val animation = AnimationUtils.loadAnimation(context, if (show) R.anim.scale_up else R.anim.scale_down)
             animation.setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationRepeat(animation: Animation?) {
-                }
-
-                override fun onAnimationEnd(animation: Animation?) {
-                    if (!show) view.visibility = View.GONE
-                }
-
-                override fun onAnimationStart(animation: Animation?) {
-                    if (show) view.visibility = View.VISIBLE
-                }
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) { if (!show) view.visibility = View.GONE }
+                override fun onAnimationStart(animation: Animation?) { if (show) view.visibility = View.VISIBLE }
             })
             view.startAnimation(animation)
         }
@@ -441,5 +366,6 @@ class TunnelListFragment : BaseFragment() {
     companion object {
         private const val CHECKED_ITEMS = "CHECKED_ITEMS"
         private const val TAG = "AmneziaWG/TunnelListFragment"
+        private const val DEFAULT_BYPASS_DOMAINS = "sber.ru\ntbank.ru\nvtb.ru\nalfabank.ru\ngosuslugi.ru\nmax.ru\nvk.com\nozon.ru\nyandex.ru"
     }
 }
