@@ -1,0 +1,17 @@
+ru.sberbankmobile
+com.idamob.tinkoff.android
+ru.vtb24.mobilebanking.android
+ru.alfabank.mobile.android
+ru.gazprombank.android.mobilebank.app
+ru.mtsbank.mobile
+ru.ozon.app.android
+ru.wildberries
+ru.yandex.market
+com.avito.android
+ru.gosuslugi.mobile
+ru.yandex.yandexmaps
+ru.yandex.taxi
+ru.vk.android
+ru.ok.android
+ru.mail.mailapp
+ru.max.android

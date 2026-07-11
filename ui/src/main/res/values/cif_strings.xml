@@ -1,13 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="cif_app_name" translatable="false">Cif VPN</string>
-    <string name="cif_status_connected">Защита включена</string>
+    <string name="cif_status_connected">VPN включён. Соединение защищено.</string>
     <string name="cif_status_connecting">Подключение…</string>
-    <string name="cif_status_disconnected">Защита отключена</string>
-    <string name="cif_power_hint_on">Нажми, чтобы отключить</string>
-    <string name="cif_power_hint_off">Нажми, чтобы подключить</string>
-    <string name="cif_split_tunneling">Раздельное туннелирование</string>
-    <string name="cif_split_tunneling_subtitle">Выбор приложений внутри туннеля</string>
-    <string name="cif_tunnel_mode">AmneziaWG tunnel</string>
-    <string name="cif_add_config">Импортировать конфиг</string>
+    <string name="cif_status_disconnected">VPN выключен. Нажмите кнопку подключения.</string>
+    <string name="cif_status_connected_short">Защищено</string>
+    <string name="cif_status_connecting_short">Подключение</string>
+    <string name="cif_status_off_short">Отключено</string>
+    <string name="cif_button_on">ON</string>
+    <string name="cif_button_off">OFF</string>
+    <string name="cif_button_connecting">•••</string>
+    <string name="cif_button_caption">VPN</string>
+    <string name="cif_power_hint_on">Нажмите, чтобы отключить VPN</string>
+    <string name="cif_power_hint_off">Нажмите, чтобы подключить VPN</string>
+    <string name="cif_power_hint_connecting">Создаём защищённый туннель…</string>
+    <string name="cif_action_diagnostics">Диагностика</string>
+    <string name="cif_action_diagnostics_subtitle">Логи и ошибки</string>
+    <string name="cif_action_exclusions">Исключения</string>
+    <string name="cif_action_exclusions_subtitle">Приложения и сайты</string>
+    <string name="cif_add_config">Добавить или импортировать конфигурацию</string>
+    <string name="cif_empty_state_text">Импортируйте VPN-конфигурацию, чтобы включить защищённый туннель.</string>
 </resources>

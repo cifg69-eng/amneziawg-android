@@ -1,4 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="cif_muted_text">#8B9AB8</color>
-</resources>
+<resources><color name="cif_success">#5FEA91</color><color name="cif_warning">#FFD166</color><color name="cif_muted_text">#8FA1BE</color></resources>

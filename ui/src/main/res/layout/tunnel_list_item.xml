@@ -2,34 +2,15 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-
     <data>
-
-        <import type="android.view.View" />
-
         <import type="org.amnezia.awg.model.ObservableTunnel" />
-
         <import type="org.amnezia.awg.model.ObservableTunnel.ConnectionStatus" />
-
         <import type="org.amnezia.awg.backend.Tunnel.State" />
-
-        <variable
-            name="collection"
-            type="org.amnezia.awg.databinding.ObservableKeyedArrayList&lt;String, ObservableTunnel&gt;" />
-
-        <variable
-            name="key"
-            type="String" />
-
-        <variable
-            name="item"
-            type="org.amnezia.awg.model.ObservableTunnel" />
-
-        <variable
-            name="fragment"
-            type="org.amnezia.awg.fragment.TunnelListFragment" />
+        <variable name="collection" type="org.amnezia.awg.databinding.ObservableKeyedArrayList&lt;String, ObservableTunnel&gt;" />
+        <variable name="key" type="String" />
+        <variable name="item" type="org.amnezia.awg.model.ObservableTunnel" />
+        <variable name="fragment" type="org.amnezia.awg.fragment.TunnelListFragment" />
     </data>
-
     <org.amnezia.awg.widget.MultiselectableRelativeLayout
         android:id="@+id/tunnel_list_item"
         android:layout_width="match_parent"
@@ -37,199 +18,175 @@
         android:background="@android:color/transparent"
         android:descendantFocusability="beforeDescendants"
         android:focusable="true"
-        android:paddingTop="4dp"
-        android:paddingBottom="20dp">
-
+        android:paddingBottom="18dp">
         <LinearLayout
             android:id="@+id/cif_root_panel"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center_horizontal"
             android:orientation="vertical">
-
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cif_status_card"
+                android:id="@+id/cif_top_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="18dp"
-                app:cardBackgroundColor="#101B33"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="22dp"
+                app:cardBackgroundColor="#B8122038"
                 app:cardCornerRadius="30dp"
                 app:cardElevation="0dp"
-                app:strokeColor="#213E73"
+                app:strokeColor="#2E6CFF"
                 app:strokeWidth="1dp">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/cif_glass_card"
                     android:orientation="vertical"
                     android:paddingStart="22dp"
-                    android:paddingTop="22dp"
+                    android:paddingTop="20dp"
                     android:paddingEnd="22dp"
-                    android:paddingBottom="22dp">
-
+                    android:paddingBottom="20dp">
                     <TextView
+                        android:id="@+id/cif_status_label"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/cif_mode_pill"
-                        android:letterSpacing="0.08"
-                        android:paddingStart="14dp"
-                        android:paddingTop="7dp"
-                        android:paddingEnd="14dp"
-                        android:paddingBottom="7dp"
-                        android:text="@string/cif_tunnel_mode"
+                        android:background="@drawable/cif_status_pill"
+                        android:letterSpacing="0.06"
+                        android:paddingStart="13dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="13dp"
+                        android:paddingBottom="6dp"
+                        android:text="@{item.connectionStatus == ConnectionStatus.CONNECTING ? @string/cif_status_connecting_short : item.state == State.UP ? @string/cif_status_connected_short : @string/cif_status_off_short}"
                         android:textAllCaps="true"
-                        android:textColor="#8EF7FF"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
+                        android:textColor="@{item.connectionStatus == ConnectionStatus.CONNECTING ? @color/cif_warning : item.state == State.UP ? @color/cif_success : @color/cif_muted_text}"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        tools:text="ЗАЩИЩЕНО" />
                     <TextView
                         android:id="@+id/tunnel_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
+                        android:layout_marginTop="14dp"
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:text="@{key}"
                         android:textColor="#FFFFFFFF"
-                        android:textSize="27sp"
+                        android:textSize="24sp"
                         android:textStyle="bold"
                         tools:text="amnezia_for_awg" />
-
                     <TextView
                         android:id="@+id/tunnel_status"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="@{item.connectionStatus == ConnectionStatus.CONNECTED ? @string/cif_status_connected : item.connectionStatus == ConnectionStatus.CONNECTING ? @string/cif_status_connecting : @string/cif_status_disconnected}"
-                        android:textColor="@{item.connectionStatus == ConnectionStatus.CONNECTED ? @color/tunnel_status_connected : item.connectionStatus == ConnectionStatus.CONNECTING ? @color/tunnel_status_connecting : @color/cif_muted_text}"
-                        android:textSize="17sp"
+                        android:layout_marginTop="5dp"
+                        android:text="@{item.connectionStatus == ConnectionStatus.CONNECTING ? @string/cif_status_connecting : item.state == State.UP ? @string/cif_status_connected : @string/cif_status_disconnected}"
+                        android:textColor="#B8C6E1"
+                        android:textSize="15sp"
                         tools:text="Защита включена" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
+            <Space android:layout_width="1dp" android:layout_height="0dp" android:layout_weight="0.55" />
             <FrameLayout
                 android:id="@+id/power_button"
-                android:layout_width="254dp"
-                android:layout_height="254dp"
-                android:layout_marginTop="10dp"
+                android:layout_width="206dp"
+                android:layout_height="206dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackgroundBorderless">
-
                 <View
                     android:id="@+id/power_glow"
-                    android:layout_width="254dp"
-                    android:layout_height="254dp"
+                    android:layout_width="206dp"
+                    android:layout_height="206dp"
                     android:layout_gravity="center"
-                    android:alpha="@{item.state == State.UP ? 0.95f : 0.38f}"
-                    android:background="@drawable/cif_power_glow" />
-
+                    android:alpha="@{item.connectionStatus == ConnectionStatus.CONNECTING ? 0.85f : item.state == State.UP ? 0.95f : 0.35f}"
+                    android:background="@{item.connectionStatus == ConnectionStatus.CONNECTING ? @drawable/cif_power_glow_connecting : item.state == State.UP ? @drawable/cif_power_glow_on : @drawable/cif_power_glow_off}" />
                 <View
                     android:id="@+id/power_ring"
-                    android:layout_width="224dp"
-                    android:layout_height="224dp"
+                    android:layout_width="174dp"
+                    android:layout_height="174dp"
                     android:layout_gravity="center"
-                    android:background="@{item.state == State.UP ? @drawable/cif_power_ring_on : @drawable/cif_power_ring_off}" />
-
-                <TextView
-                    android:layout_width="102dp"
-                    android:layout_height="102dp"
-                    android:layout_gravity="center"
-                    android:background="@{item.state == State.UP ? @drawable/cif_power_core_on : @drawable/cif_power_core_off}"
-                    android:gravity="center"
-                    android:text="⏻"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="50sp"
-                    android:textStyle="bold" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/power_hint"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:gravity="center"
-                android:text="@{item.state == State.UP ? @string/cif_power_hint_on : @string/cif_power_hint_off}"
-                android:textColor="#B7C7E6"
-                android:textSize="16sp" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/split_tunneling_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground"
-                app:cardBackgroundColor="#13213F"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#1F74FF"
-                app:strokeWidth="1dp">
-
+                    android:background="@{item.connectionStatus == ConnectionStatus.CONNECTING ? @drawable/cif_power_ring_connecting : item.state == State.UP ? @drawable/cif_power_ring_on : @drawable/cif_power_ring_off}" />
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="18dp"
-                    android:paddingTop="16dp"
-                    android:paddingEnd="18dp"
-                    android:paddingBottom="16dp">
-
+                    android:id="@+id/power_core"
+                    android:layout_width="126dp"
+                    android:layout_height="126dp"
+                    android:layout_gravity="center"
+                    android:background="@{item.connectionStatus == ConnectionStatus.CONNECTING ? @drawable/cif_power_core_connecting : item.state == State.UP ? @drawable/cif_power_core_on : @drawable/cif_power_core_off}"
+                    android:gravity="center"
+                    android:orientation="vertical">
                     <TextView
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:background="@drawable/cif_split_icon_bg"
-                        android:gravity="center"
-                        android:text="⇄"
-                        android:textColor="#FFFFFF"
+                        android:id="@+id/power_state_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{item.connectionStatus == ConnectionStatus.CONNECTING ? @string/cif_button_connecting : item.state == State.UP ? @string/cif_button_on : @string/cif_button_off}"
+                        android:textColor="#FFFFFFFF"
                         android:textSize="26sp"
                         android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/cif_split_tunneling"
-                            android:textColor="#FFFFFFFF"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/cif_split_tunneling_subtitle"
-                            android:textColor="#91A4C6"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="#DDE8FF"
-                        android:textSize="34sp" />
+                        android:layout_marginTop="-1dp"
+                        android:text="@string/cif_button_caption"
+                        android:textColor="#B6C7E7"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <org.amnezia.awg.widget.ToggleSwitch
-                android:id="@+id/tunnel_switch"
-                android:layout_width="1dp"
-                android:layout_height="1dp"
-                android:alpha="0"
-                android:clickable="false"
-                android:focusable="false"
-                app:checked="@{item.state == State.UP}"
-                app:onBeforeCheckedChanged="@{fragment::setTunnelState}" />
-
+            </FrameLayout>
+            <TextView
+                android:id="@+id/power_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center"
+                android:text="@{item.connectionStatus == ConnectionStatus.CONNECTING ? @string/cif_power_hint_connecting : item.state == State.UP ? @string/cif_power_hint_on : @string/cif_power_hint_off}"
+                android:textColor="#C4D1EA"
+                android:textSize="16sp"
+                tools:text="Нажмите, чтобы отключить" />
+            <Space android:layout_width="1dp" android:layout_height="0dp" android:layout_weight="0.45" />
+            <LinearLayout
+                android:id="@+id/cif_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/diagnostics_button"
+                    android:layout_width="0dp"
+                    android:layout_height="76dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="#66111D33"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#20395F"
+                    app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="vertical" android:paddingStart="15dp" android:paddingEnd="15dp">
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/cif_action_diagnostics" android:textColor="#FFFFFFFF" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/cif_action_diagnostics_subtitle" android:textColor="#8FA1BE" android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/split_tunneling_button"
+                    android:layout_width="0dp"
+                    android:layout_height="76dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="#66111D33"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#20395F"
+                    app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="vertical" android:paddingStart="15dp" android:paddingEnd="15dp">
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/cif_action_exclusions" android:textColor="#FFFFFFFF" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/cif_action_exclusions_subtitle" android:textColor="#8FA1BE" android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
         </LinearLayout>
     </org.amnezia.awg.widget.MultiselectableRelativeLayout>
 </layout>
