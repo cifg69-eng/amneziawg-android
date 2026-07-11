@@ -1,1 +1,36 @@
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item><shape android:shape="rectangle"><gradient android:angle="270" android:startColor="#050914" android:centerColor="#071225" android:endColor="#02040B"/></shape></item><item android:left="-80dp" android:top="72dp" android:right="180dp" android:bottom="360dp"><shape android:shape="oval"><gradient android:type="radial" android:gradientRadius="180dp" android:startColor="#4436D7FF" android:endColor="#00000000"/></shape></item><item android:left="170dp" android:top="300dp" android:right="-120dp" android:bottom="90dp"><shape android:shape="oval"><gradient android:type="radial" android:gradientRadius="230dp" android:startColor="#36325BFF" android:endColor="#00000000"/></shape></item></layer-list>
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#050914"
+                android:centerColor="#071225"
+                android:endColor="#02040B" />
+        </shape>
+    </item>
+
+    <item android:left="0dp" android:top="88dp" android:right="180dp" android:bottom="360dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="50%"
+                android:centerY="50%"
+                android:gradientRadius="180dp"
+                android:startColor="#4436D7FF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <item android:left="170dp" android:top="300dp" android:right="0dp" android:bottom="90dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="50%"
+                android:centerY="50%"
+                android:gradientRadius="230dp"
+                android:startColor="#36325BFF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+</layer-list>
