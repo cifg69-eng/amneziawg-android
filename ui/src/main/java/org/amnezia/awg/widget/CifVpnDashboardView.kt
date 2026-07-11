@@ -65,7 +65,8 @@ class CifVpnDashboardView @JvmOverloads constructor(
     init {
         isClickable = true
         isFocusable = true
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
+        // Keep the default hardware-accelerated window rendering.
+        // A full-screen software layer exceeds the device drawing-cache limit.
     }
 
     fun update(

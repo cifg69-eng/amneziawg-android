@@ -1,0 +1,12 @@
+--- a/ui/src/main/java/org/amnezia/awg/widget/CifVpnDashboardView.kt
++++ b/ui/src/main/java/org/amnezia/awg/widget/CifVpnDashboardView.kt
+@@ -65,7 +65,8 @@
+     init {
+         isClickable = true
+         isFocusable = true
+-        setLayerType(LAYER_TYPE_SOFTWARE, null)
++        // Keep the default hardware-accelerated window rendering.
++        // A full-screen software layer exceeds the device drawing-cache limit.
+     }
+ 
+     fun update(
