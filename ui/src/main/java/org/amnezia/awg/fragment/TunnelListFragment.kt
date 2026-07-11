@@ -134,7 +134,6 @@ class TunnelListFragment : BaseFragment() {
         super.onViewStateRestored(savedInstanceState)
         binding ?: return
         binding!!.fragment = this
-        lifecycleScope.launch { binding!!.tunnels = Application.getTunnelManager().getTunnels() }
         binding!!.rowConfigurationHandler =
             object : RowConfigurationHandler<TunnelListItemBinding, ObservableTunnel> {
                 override fun onConfigureRow(row: TunnelListItemBinding, item: ObservableTunnel, position: Int) {
@@ -184,6 +183,26 @@ class TunnelListFragment : BaseFragment() {
                         (row.root as MultiselectableRelativeLayout).setSingleSelected(selectedTunnel == item)
                 }
             }
+
+        lifecycleScope.launch {
+            val tunnels = Application.getTunnelManager().getTunnels()
+            val currentBinding = binding ?: return@launch
+            currentBinding.tunnels = tunnels
+            currentBinding.executePendingBindings()
+            currentBinding.tunnelList.post {
+                currentBinding.tunnelList.recycledViewPool.clear()
+                currentBinding.tunnelList.adapter?.notifyDataSetChanged()
+                currentBinding.tunnelList.requestLayout()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding?.tunnelList?.post {
+            binding?.tunnelList?.adapter?.notifyDataSetChanged()
+            binding?.tunnelList?.requestLayout()
+        }
     }
 
     private fun startDashboardUpdates(view: CifVpnDashboardView, item: ObservableTunnel) {

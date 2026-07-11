@@ -10,14 +10,13 @@
     <org.amnezia.awg.widget.MultiselectableRelativeLayout
         android:id="@+id/tunnel_list_item"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="860dp"
         android:background="@android:color/transparent"
         android:focusable="true">
 
         <org.amnezia.awg.widget.CifVpnDashboardView
             android:id="@+id/dashboard_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="850dp" />
+            android:layout_height="match_parent" />
     </org.amnezia.awg.widget.MultiselectableRelativeLayout>
 </layout>
