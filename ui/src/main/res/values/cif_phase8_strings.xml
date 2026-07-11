@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cif_bypass_saved">Белый список сохранён и применён</string>
+    <string name="cif_bypass_error">Не удалось применить белый список: %1$s</string>
+    <string name="cif_color_title">Цвет интерфейса</string>
+    <string name="cif_apply">Применить</string>
+</resources>
