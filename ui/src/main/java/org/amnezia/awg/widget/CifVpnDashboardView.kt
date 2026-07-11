@@ -3,7 +3,6 @@ package org.amnezia.awg.widget
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
-import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -22,6 +21,8 @@ class CifVpnDashboardView @JvmOverloads constructor(
     enum class UiState { OFF, CONNECTING, ON }
 
     var onPowerClick: (() -> Unit)? = null
+    var onMenuClick: (() -> Unit)? = null
+    var onHeaderSettingsClick: (() -> Unit)? = null
     var onWhitelistClick: (() -> Unit)? = null
     var onImportClick: (() -> Unit)? = null
     var onSettingsClick: (() -> Unit)? = null
@@ -44,6 +45,8 @@ class CifVpnDashboardView @JvmOverloads constructor(
     private var whitelistCount = 0
     private var accentColor = Color.rgb(33, 229, 197)
 
+    private val headerMenuRect = RectF()
+    private val headerSettingsRect = RectF()
     private val powerRect = RectF()
     private val whitelistRect = RectF()
     private val importRect = RectF()
@@ -97,6 +100,19 @@ class CifVpnDashboardView @JvmOverloads constructor(
         super.onDetachedFromWindow()
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val measuredWidth = MeasureSpec.getSize(widthMeasureSpec).takeIf { it > 0 }
+            ?: resources.displayMetrics.widthPixels
+        val circleSize = min(measuredWidth.toFloat() - dp(76f), dp(310f)).coerceAtLeast(dp(220f))
+        val desiredHeight = (dp(20f + 58f + 105f + 20f + 94f + 126f + 80f + 30f) + circleSize).toInt()
+        val width = resolveSize(measuredWidth, widthMeasureSpec)
+        val height = when (MeasureSpec.getMode(heightMeasureSpec)) {
+            MeasureSpec.EXACTLY -> maxOf(MeasureSpec.getSize(heightMeasureSpec), desiredHeight)
+            else -> desiredHeight
+        }
+        setMeasuredDimension(width, height)
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val w = width.toFloat()
@@ -146,6 +162,9 @@ class CifVpnDashboardView @JvmOverloads constructor(
     }
 
     private fun drawHeader(canvas: Canvas, left: Float, top: Float, right: Float) {
+        headerMenuRect.set(left - dp(10f), top - dp(8f), left + dp(46f), top + dp(50f))
+        headerSettingsRect.set(right - dp(58f), top - dp(8f), right + dp(8f), top + dp(52f))
+
         paint.color = Color.rgb(139, 159, 185)
         paint.strokeWidth = dp(2.3f)
         for (i in 0..2) canvas.drawLine(left, top + dp(10f + i * 8f), left + dp(25f), top + dp(10f + i * 8f), paint)
@@ -428,6 +447,8 @@ class CifVpnDashboardView @JvmOverloads constructor(
                 val x = event.x
                 val y = event.y
                 when {
+                    headerMenuRect.contains(x, y) -> onMenuClick?.invoke()
+                    headerSettingsRect.contains(x, y) -> onHeaderSettingsClick?.invoke()
                     powerRect.contains(x, y) -> onPowerClick?.invoke()
                     whitelistRect.contains(x, y) -> onWhitelistClick?.invoke()
                     importRect.contains(x, y) -> onImportClick?.invoke()

@@ -32,6 +32,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.amnezia.awg.Application
 import org.amnezia.awg.R
+import org.amnezia.awg.activity.SettingsActivity
 import org.amnezia.awg.activity.TunnelCreatorActivity
 import org.amnezia.awg.backend.Tunnel
 import org.amnezia.awg.databinding.ObservableKeyedRecyclerViewAdapter.RowConfigurationHandler
@@ -141,6 +142,21 @@ class TunnelListFragment : BaseFragment() {
                     row.root.setOnLongClickListener {
                         actionModeListener.toggleItemChecked(position)
                         true
+                    }
+
+                    row.dashboardView.onMenuClick = {
+                        if (actionMode == null) {
+                            startActivity(Intent(requireContext(), SettingsActivity::class.java))
+                        } else {
+                            actionModeListener.toggleItemChecked(position)
+                        }
+                    }
+                    row.dashboardView.onHeaderSettingsClick = {
+                        if (actionMode == null) {
+                            showAccentPicker(row.dashboardView)
+                        } else {
+                            actionModeListener.toggleItemChecked(position)
+                        }
                     }
 
                     row.dashboardView.onPowerClick = {
