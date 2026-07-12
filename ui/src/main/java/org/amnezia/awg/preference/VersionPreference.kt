@@ -24,6 +24,5 @@ class VersionPreference(context: Context, attrs: AttributeSet?) : Preference(con
 
     init {
         isSelectable = false
-        isCopyingEnabled = false
     }
 }

@@ -56,30 +56,31 @@ class SettingsActivity : AppCompatActivity() {
             preferenceScreen.initialExpandedChildrenCount = 5
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || QuickTileService.isAdded) {
-                preferenceManager.findPreference<Preference>("quick_tile")
-                    ?.parent
-                    ?.removePreference(preferenceManager.findPreference("quick_tile"))
+                val quickTile = preferenceManager.findPreference<Preference>("quick_tile")
+                quickTile?.parent?.removePreference(quickTile)
                 --preferenceScreen.initialExpandedChildrenCount
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                preferenceManager.findPreference<Preference>("dark_theme")
-                    ?.parent
-                    ?.removePreference(preferenceManager.findPreference("dark_theme"))
+                val darkTheme = preferenceManager.findPreference<Preference>("dark_theme")
+                darkTheme?.parent?.removePreference(darkTheme)
                 --preferenceScreen.initialExpandedChildrenCount
             }
 
             if (AdminKnobs.disableConfigExport) {
-                preferenceManager.findPreference<Preference>("zip_exporter")
-                    ?.parent
-                    ?.removePreference(preferenceManager.findPreference("zip_exporter"))
+                val zipExporter = preferenceManager.findPreference<Preference>("zip_exporter")
+                zipExporter?.parent?.removePreference(zipExporter)
             }
 
-            val awgQuickOnlyPrefs = arrayOf(
-                preferenceManager.findPreference("tools_installer"),
-                preferenceManager.findPreference("restore_on_boot"),
+            val toolsInstaller =
+                preferenceManager.findPreference<Preference>("tools_installer")
+            val restoreOnBoot =
+                preferenceManager.findPreference<Preference>("restore_on_boot")
+            val multipleTunnels =
                 preferenceManager.findPreference<Preference>("multiple_tunnels")
-            ).filterNotNull()
+
+            val awgQuickOnlyPrefs =
+                listOfNotNull(toolsInstaller, restoreOnBoot, multipleTunnels)
 
             awgQuickOnlyPrefs.forEach { it.isVisible = false }
 
@@ -88,7 +89,9 @@ class SettingsActivity : AppCompatActivity() {
                     ++preferenceScreen.initialExpandedChildrenCount
                     awgQuickOnlyPrefs.forEach { it.isVisible = true }
                 } else {
-                    awgQuickOnlyPrefs.forEach { it.parent?.removePreference(it) }
+                    awgQuickOnlyPrefs.forEach { preference ->
+                        preference.parent?.removePreference(preference)
+                    }
                 }
             }
 
