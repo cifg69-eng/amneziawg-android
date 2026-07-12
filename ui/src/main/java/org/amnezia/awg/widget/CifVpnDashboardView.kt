@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
+import org.amnezia.awg.R
 import kotlin.math.min
 
 /**
@@ -35,6 +36,10 @@ class CifVpnDashboardView @JvmOverloads constructor(
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
+    }
+    private val brandPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val brandLogo: Bitmap by lazy {
+        BitmapFactory.decodeResource(resources, R.drawable.cif_brand_logo)
     }
 
     private var state = UiState.OFF
@@ -161,16 +166,38 @@ class CifVpnDashboardView @JvmOverloads constructor(
 
         paint.color = Color.rgb(139, 159, 185)
         paint.strokeWidth = dp(2.3f)
-        for (i in 0..2) canvas.drawLine(left, top + dp(10f + i * 8f), left + dp(25f), top + dp(10f + i * 8f), paint)
+        for (i in 0..2) {
+            canvas.drawLine(
+                left,
+                top + dp(10f + i * 8f),
+                left + dp(25f),
+                top + dp(10f + i * 8f),
+                paint
+            )
+        }
 
-        paint.textAlign = Paint.Align.CENTER
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        paint.textSize = sp(29f)
-        paint.color = Color.WHITE
-        canvas.drawText("Cif ", width / 2f - dp(18f), top + dp(31f), paint)
-        paint.color = accentColor
-        canvas.drawText("VPN", width / 2f + dp(34f), top + dp(31f), paint)
+        paint.textSize = sp(28f)
+        paint.textAlign = Paint.Align.LEFT
 
+        val logoSize = dp(42f)
+        val gap = dp(10f)
+        val cifText = "Cif "
+        val vpnText = "VPN"
+        val cifWidth = paint.measureText(cifText)
+        val vpnWidth = paint.measureText(vpnText)
+        val totalWidth = logoSize + gap + cifWidth + vpnWidth
+        val startX = width / 2f - totalWidth / 2f
+
+        drawBrandLogo(
+            canvas,
+            RectF(startX, top - dp(5f), startX + logoSize, top - dp(5f) + logoSize)
+        )
+
+        paint.color = Color.WHITE
+        canvas.drawText(cifText, startX + logoSize + gap, top + dp(31f), paint)
+        paint.color = accentColor
+        canvas.drawText(vpnText, startX + logoSize + gap + cifWidth, top + dp(31f), paint)
     }
 
     private fun drawStatusCard(canvas: Canvas, left: Float, top: Float, right: Float, bottom: Float) {
@@ -269,9 +296,10 @@ class CifVpnDashboardView @JvmOverloads constructor(
     private fun drawServerCard(canvas: Canvas, left: Float, top: Float, right: Float, bottom: Float) {
         val rect = RectF(left, top, right, bottom)
         drawGlassCard(canvas, rect, dp(20f))
-        paint.color = withAlpha(accentColor, 35)
-        canvas.drawRoundRect(RectF(left + dp(15f), top + dp(15f), left + dp(59f), bottom - dp(15f)), dp(13f), dp(13f), paint)
-        drawSwirlIcon(canvas, left + dp(37f), (top + bottom) / 2f, dp(15f), accentColor)
+        drawBrandLogo(
+            canvas,
+            RectF(left + dp(14f), top + dp(14f), left + dp(62f), bottom - dp(14f))
+        )
 
         paint.textAlign = Paint.Align.LEFT
         paint.typeface = Typeface.DEFAULT
@@ -304,6 +332,12 @@ class CifVpnDashboardView @JvmOverloads constructor(
         paint.textSize = sp(10.5f)
         paint.color = Color.rgb(126, 144, 170)
         canvas.drawText(subtitle, cx, rect.top + dp(90f), paint)
+    }
+
+    private fun drawBrandLogo(canvas: Canvas, destination: RectF, alpha: Int = 255) {
+        brandPaint.alpha = alpha.coerceIn(0, 255)
+        canvas.drawBitmap(brandLogo, null, destination, brandPaint)
+        brandPaint.alpha = 255
     }
 
     private fun drawGlassCard(canvas: Canvas, rect: RectF, radius: Float) {
@@ -380,13 +414,6 @@ class CifVpnDashboardView @JvmOverloads constructor(
         }
     }
 
-    private fun drawSwirlIcon(canvas: Canvas, cx: Float, cy: Float, r: Float, color: Int) {
-        stroke.strokeWidth = dp(4f)
-        stroke.color = color
-        canvas.drawArc(RectF(cx-r, cy-r, cx+r, cy+r), -40f, 285f, false, stroke)
-        stroke.color = lighten(color, 40)
-        canvas.drawArc(RectF(cx-r*.68f, cy-r*.68f, cx+r*.68f, cy+r*.68f), 130f, 250f, false, stroke)
-    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {

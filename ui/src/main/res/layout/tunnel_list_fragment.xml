@@ -52,20 +52,18 @@
             android:paddingBottom="28dp"
             android:visibility="@{tunnels.size() == 0 ? android.view.View.VISIBLE : android.view.View.GONE}">
 
-            <TextView
-                android:layout_width="84dp"
-                android:layout_height="84dp"
-                android:background="@drawable/cif_empty_orb"
-                android:gravity="center"
-                android:text="C"
-                android:textColor="#FFFFFF"
-                android:textSize="36sp"
-                android:textStyle="bold" />
+            <ImageView
+                android:layout_width="124dp"
+                android:layout_height="124dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/cif_app_name"
+                android:scaleType="fitCenter"
+                android:src="@drawable/cif_brand_logo" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="18dp"
                 android:text="@string/cif_app_name"
                 android:textColor="#FFFFFF"
                 android:textSize="30sp"
@@ -87,7 +85,7 @@
                 android:layout_marginTop="18dp"
                 android:gravity="center"
                 android:text="Нажмите кнопку + внизу, чтобы импортировать конфигурацию"
-                android:textColor="#21E5C5"
+                android:textColor="#FF409A"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -100,10 +98,10 @@
             android:layout_margin="22dp"
             android:contentDescription="@string/cif_add_config"
             android:visibility="@{tunnels.size() == 0 ? android.view.View.VISIBLE : android.view.View.GONE}"
-            app:backgroundTint="#21E5C5"
+            app:backgroundTint="#FF409A"
             app:elevation="10dp"
             app:fabCustomSize="64dp"
-            app:rippleColor="#9BFFF0"
+            app:rippleColor="#FFB1D2"
             app:srcCompat="@drawable/ic_action_add_white"
             app:tint="#04111F" />
 

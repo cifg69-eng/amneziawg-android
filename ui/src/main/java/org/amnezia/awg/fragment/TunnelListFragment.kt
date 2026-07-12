@@ -420,7 +420,7 @@ class TunnelListFragment : BaseFragment() {
         private const val TAG = "CifVPN/Dashboard"
         private const val PREFS_UI = "cif_ui"
         private const val KEY_ACCENT = "accent_color"
-        private val DEFAULT_ACCENT = Color.rgb(33, 229, 197)
+        private val DEFAULT_ACCENT = Color.rgb(255, 64, 154)
 
         private val SMART_BYPASS_PACKAGES = setOf(
             "ru.sberbankmobile",

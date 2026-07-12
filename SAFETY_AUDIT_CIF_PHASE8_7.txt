@@ -1,0 +1,26 @@
+CIF VPN PHASE 8.7 — SAFETY AUDIT
+
+ALLOWED CHANGES
+- ui/src/main visual resources
+- ui strings displayed to the user
+- launcher / splash / banner / tile artwork
+- custom Cif dashboard drawing
+- default visual accent
+
+FORBIDDEN AND NOT CHANGED
+- tunnel/src
+- native code
+- crypto
+- Backend / GoBackend
+- TunnelManager
+- BaseFragment.setTunnelState
+- config parsing and storage
+- private/public key handling
+- org.amnezia.awg package namespace
+- applicationId
+- protocol identifiers
+
+BLACK STRIP PROTECTION
+- CifMainTheme still uses windowActionBarOverlay=true
+- MainActivity Phase 8.6 content top-margin logic is included unchanged
+- dashboard never calls setLayerType(LAYER_TYPE_SOFTWARE, null)
