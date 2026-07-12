@@ -1,0 +1,161 @@
+--- a/ui/src/main/java/org/amnezia/awg/widget/CifVpnDashboardView.kt
++++ b/ui/src/main/java/org/amnezia/awg/widget/CifVpnDashboardView.kt
+@@ -38,7 +38,7 @@
+     }
+ 
+     private var state = UiState.OFF
+-    private var profileName = "Cif VPN"
++    private var serverEndpoint = "Не указан"
+     private var sessionSeconds = 0L
+     private var whitelistCount = 0
+     private var accentColor = Color.rgb(33, 229, 197)
+@@ -68,13 +68,13 @@
+ 
+     fun update(
+         uiState: UiState,
+-        profile: String,
++        serverEndpoint: String,
+         elapsedSeconds: Long,
+         bypassCount: Int,
+         accent: Int
+     ) {
+         state = uiState
+-        profileName = profile
++        this.serverEndpoint = serverEndpoint
+         sessionSeconds = elapsedSeconds.coerceAtLeast(0)
+         whitelistCount = bypassCount.coerceAtLeast(0)
+         accentColor = accent
+@@ -277,11 +277,11 @@
+         paint.typeface = Typeface.DEFAULT
+         paint.textSize = sp(12.5f)
+         paint.color = Color.rgb(135, 153, 178)
+-        canvas.drawText("Текущее подключение", left + dp(75f), top + dp(29f), paint)
++        canvas.drawText("Сервер VPN", left + dp(75f), top + dp(29f), paint)
+         paint.typeface = Typeface.DEFAULT_BOLD
+         paint.textSize = sp(16f)
+         paint.color = Color.WHITE
+-        canvas.drawText(profileName, left + dp(75f), top + dp(53f), paint)
++        canvas.drawText(serverEndpoint, left + dp(75f), top + dp(53f), paint)
+ 
+         drawSignalIcon(canvas, right - dp(32f), (top + bottom) / 2f, accentColor)
+     }
+
+--- a/ui/src/main/java/org/amnezia/awg/fragment/TunnelListFragment.kt
++++ b/ui/src/main/java/org/amnezia/awg/fragment/TunnelListFragment.kt
+@@ -213,11 +213,25 @@
+                 if (isUp && sessionStartedAt[item.name] == null) sessionStartedAt[item.name] = now
+                 if (!isUp) sessionStartedAt.remove(item.name)
+ 
+-                val bypassCount = try {
+-                    item.getConfigAsync().`interface`.excludedApplications.size
++                val currentConfig = try {
++                    item.getConfigAsync()
+                 } catch (_: Throwable) {
+-                    0
+-                }
++                    null
++                }
++
++                val bypassCount = currentConfig?.`interface`?.excludedApplications?.size ?: 0
++
++                val endpointOptional = currentConfig
++                    ?.getPeers()
++                    ?.firstOrNull()
++                    ?.getEndpoint()
++
++                val serverEndpoint =
++                    if (endpointOptional != null && endpointOptional.isPresent) {
++                        endpointOptional.get().toString()
++                    } else {
++                        "Не указан"
++                    }
+ 
+                 val accent = requireContext()
+                     .getSharedPreferences(PREFS_UI, 0)
+@@ -225,7 +239,7 @@
+ 
+                 view.update(
+                     uiState = uiState,
+-                    profile = item.name,
++                    serverEndpoint = serverEndpoint,
+                     elapsedSeconds = sessionStartedAt[item.name]?.let { (now - it) / 1000L } ?: 0L,
+                     bypassCount = bypassCount,
+                     accent = accent
+
+--- a/ui/src/main/java/org/amnezia/awg/activity/MainActivity.kt
++++ b/ui/src/main/java/org/amnezia/awg/activity/MainActivity.kt
+@@ -8,7 +8,9 @@
+ import android.os.Bundle
+ import android.view.Menu
+ import android.view.MenuItem
++import android.util.TypedValue
+ import android.view.View
++import android.view.ViewGroup
+ import androidx.activity.OnBackPressedCallback
+ import androidx.activity.addCallback
+ import androidx.appcompat.app.ActionBar
+@@ -36,6 +38,24 @@
+         if (backStackEntries == 1) selectedTunnel = null
+     }
+ 
++    private fun resolveActionBarHeight(): Int {
++        val value = TypedValue()
++        if (!theme.resolveAttribute(android.R.attr.actionBarSize, value, true)) return 0
++        return if (value.resourceId != 0) {
++            resources.getDimensionPixelSize(value.resourceId)
++        } else {
++            TypedValue.complexToDimensionPixelSize(value.data, resources.displayMetrics)
++        }
++    }
++
++    private fun setContentTopMargin(topMargin: Int) {
++        val content = findViewById<View>(R.id.detail_container) ?: return
++        val params = content.layoutParams as? ViewGroup.MarginLayoutParams ?: return
++        if (params.topMargin == topMargin) return
++        params.topMargin = topMargin
++        content.layoutParams = params
++    }
++
+     override fun onBackStackChanged() {
+         val backStackEntries = supportFragmentManager.backStackEntryCount
+         backPressedCallback?.isEnabled = backStackEntries >= 1
+@@ -43,9 +63,12 @@
+         // The dashboard has its own header. Hiding the native bar removes the duplicate
+         // black "Cif VPN" row and returns its vertical space to the product screen.
+         if (backStackEntries == 0) {
++            actionBar?.setDisplayHomeAsUpEnabled(false)
+             actionBar?.hide()
++            setContentTopMargin(0)
+         } else {
+             actionBar?.show()
++            setContentTopMargin(resolveActionBarHeight())
+             val minBackStackEntries = if (isTwoPaneLayout) 2 else 1
+             actionBar?.setDisplayHomeAsUpEnabled(backStackEntries >= minBackStackEntries)
+         }
+
+--- a/ui/src/main/res/values/styles.xml
++++ b/ui/src/main/res/values/styles.xml
+@@ -14,6 +14,10 @@
+ 
+     <!-- Various additional API-specific features in values-v*/styles.xml -->
+     <style name="AppTheme" parent="AppThemeBase" />
++
++    <style name="CifMainTheme" parent="AppTheme">
++        <item name="windowActionBarOverlay">true</item>
++    </style>
+ 
+     <style name="AmneziaWgTheme.MaterialCardView" parent="Widget.Material3.CardView.Elevated">
+         <item name="cornerRadius">4dp</item>
+
+--- a/ui/src/main/AndroidManifest.xml
++++ b/ui/src/main/AndroidManifest.xml
+@@ -53,7 +53,8 @@
+ 
+         <activity
+             android:name=".activity.MainActivity"
+-            android:exported="true">
++            android:exported="true"
++            android:theme="@style/CifMainTheme">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+ 

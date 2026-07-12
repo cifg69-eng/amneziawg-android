@@ -8,7 +8,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.util.TypedValue
 import android.view.View
+import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.appcompat.app.ActionBar
@@ -36,6 +38,24 @@ class MainActivity : BaseActivity(), FragmentManager.OnBackStackChangedListener 
         if (backStackEntries == 1) selectedTunnel = null
     }
 
+    private fun resolveActionBarHeight(): Int {
+        val value = TypedValue()
+        if (!theme.resolveAttribute(android.R.attr.actionBarSize, value, true)) return 0
+        return if (value.resourceId != 0) {
+            resources.getDimensionPixelSize(value.resourceId)
+        } else {
+            TypedValue.complexToDimensionPixelSize(value.data, resources.displayMetrics)
+        }
+    }
+
+    private fun setContentTopMargin(topMargin: Int) {
+        val content = findViewById<View>(R.id.detail_container) ?: return
+        val params = content.layoutParams as? ViewGroup.MarginLayoutParams ?: return
+        if (params.topMargin == topMargin) return
+        params.topMargin = topMargin
+        content.layoutParams = params
+    }
+
     override fun onBackStackChanged() {
         val backStackEntries = supportFragmentManager.backStackEntryCount
         backPressedCallback?.isEnabled = backStackEntries >= 1
@@ -43,9 +63,12 @@ class MainActivity : BaseActivity(), FragmentManager.OnBackStackChangedListener 
         // The dashboard has its own header. Hiding the native bar removes the duplicate
         // black "Cif VPN" row and returns its vertical space to the product screen.
         if (backStackEntries == 0) {
+            actionBar?.setDisplayHomeAsUpEnabled(false)
             actionBar?.hide()
+            setContentTopMargin(0)
         } else {
             actionBar?.show()
+            setContentTopMargin(resolveActionBarHeight())
             val minBackStackEntries = if (isTwoPaneLayout) 2 else 1
             actionBar?.setDisplayHomeAsUpEnabled(backStackEntries >= minBackStackEntries)
         }

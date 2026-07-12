@@ -38,7 +38,7 @@ class CifVpnDashboardView @JvmOverloads constructor(
     }
 
     private var state = UiState.OFF
-    private var profileName = "Cif VPN"
+    private var serverEndpoint = "Не указан"
     private var sessionSeconds = 0L
     private var whitelistCount = 0
     private var accentColor = Color.rgb(33, 229, 197)
@@ -68,13 +68,13 @@ class CifVpnDashboardView @JvmOverloads constructor(
 
     fun update(
         uiState: UiState,
-        profile: String,
+        serverEndpoint: String,
         elapsedSeconds: Long,
         bypassCount: Int,
         accent: Int
     ) {
         state = uiState
-        profileName = profile
+        this.serverEndpoint = serverEndpoint
         sessionSeconds = elapsedSeconds.coerceAtLeast(0)
         whitelistCount = bypassCount.coerceAtLeast(0)
         accentColor = accent
@@ -277,11 +277,11 @@ class CifVpnDashboardView @JvmOverloads constructor(
         paint.typeface = Typeface.DEFAULT
         paint.textSize = sp(12.5f)
         paint.color = Color.rgb(135, 153, 178)
-        canvas.drawText("Текущее подключение", left + dp(75f), top + dp(29f), paint)
+        canvas.drawText("Сервер VPN", left + dp(75f), top + dp(29f), paint)
         paint.typeface = Typeface.DEFAULT_BOLD
         paint.textSize = sp(16f)
         paint.color = Color.WHITE
-        canvas.drawText(profileName, left + dp(75f), top + dp(53f), paint)
+        canvas.drawText(serverEndpoint, left + dp(75f), top + dp(53f), paint)
 
         drawSignalIcon(canvas, right - dp(32f), (top + bottom) / 2f, accentColor)
     }

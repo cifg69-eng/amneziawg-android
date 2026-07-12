@@ -1,0 +1,285 @@
+openapi: 3.1.0
+info:
+  title: Cif VPN Control API
+  version: 1.0.0-draft
+  description: Control-plane contract. It never accepts or returns a device private key.
+servers:
+  - url: https://api.cifvpn.example/v1
+paths:
+  /auth/register:
+    post:
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account and session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /auth/refresh:
+    post:
+      operationId: refreshSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string, minLength: 32 }
+      responses:
+        '200':
+          description: Rotated session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me:
+    get:
+      operationId: getMe
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Current account and entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /devices:
+    get:
+      operationId: listDevices
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Registered devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Device' }
+    post:
+      operationId: registerDevice
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDeviceRequest'
+      responses:
+        '201':
+          description: Device registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '403':
+          description: Device limit reached
+  /devices/{deviceId}:
+    delete:
+      operationId: revokeDevice
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204': { description: Device revoked and peer removal scheduled }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /devices/{deviceId}/profile:
+    post:
+      operationId: issueProfile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferredCountry: { type: string, pattern: '^[A-Z]{2}$' }
+      responses:
+        '200':
+          description: Public server material and leased network configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VpnProfileLease'
+        '402': { description: Active entitlement required }
+        '409': { description: Device public key must be registered first }
+  /referrals/me:
+    get:
+      operationId: getReferralSummary
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Referral code and reward totals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralSummary'
+  /referrals/claim:
+    post:
+      operationId: claimReferralCode
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, pattern: '^CIF-[A-Z0-9]{6,12}$' }
+      responses:
+        '204': { description: Referral relation recorded; no reward granted yet }
+        '409': { description: Code cannot be claimed for this account }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    DeviceId:
+      name: deviceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Unauthorized:
+      description: Authentication required
+    Conflict:
+      description: Resource already exists
+    NotFound:
+      description: Resource not found
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 12, maxLength: 128 }
+        referralCode: { type: string, pattern: '^CIF-[A-Z0-9]{6,12}$' }
+    Session:
+      type: object
+      required: [accessToken, refreshToken, expiresInSeconds]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresInSeconds: { type: integer, minimum: 60 }
+    Account:
+      type: object
+      required: [id, email, entitlement]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        entitlement: { $ref: '#/components/schemas/Entitlement' }
+    Entitlement:
+      type: object
+      required: [active, deviceLimit]
+      properties:
+        active: { type: boolean }
+        paidUntil: { type: [string, 'null'], format: date-time }
+        deviceLimit: { type: integer, minimum: 0 }
+        bonusDays: { type: integer, minimum: 0 }
+    RegisterDeviceRequest:
+      type: object
+      required: [name, platform, publicKey]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        platform: { type: string, enum: [android] }
+        publicKey:
+          type: string
+          description: AmneziaWG/WireGuard public key only. Private keys are forbidden.
+        appVersion: { type: string, maxLength: 32 }
+    Device:
+      type: object
+      required: [id, name, platform, publicKey, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        platform: { type: string, enum: [android] }
+        publicKey: { type: string }
+        createdAt: { type: string, format: date-time }
+        revokedAt: { type: [string, 'null'], format: date-time }
+    VpnProfileLease:
+      type: object
+      required: [leaseId, expiresAt, interface, peer]
+      properties:
+        leaseId: { type: string, format: uuid }
+        expiresAt: { type: string, format: date-time }
+        interface:
+          type: object
+          required: [addresses, dns]
+          properties:
+            addresses:
+              type: array
+              items: { type: string }
+            dns:
+              type: array
+              items: { type: string }
+            mtu: { type: integer, minimum: 576, maximum: 1500 }
+        peer:
+          type: object
+          required: [publicKey, endpoint, allowedIps, persistentKeepalive]
+          properties:
+            publicKey: { type: string }
+            presharedKey: { type: [string, 'null'] }
+            endpoint: { type: string }
+            allowedIps:
+              type: array
+              items: { type: string }
+            persistentKeepalive: { type: integer, minimum: 0, maximum: 65535 }
+            amnezia:
+              $ref: '#/components/schemas/AmneziaParameters'
+    AmneziaParameters:
+      type: object
+      additionalProperties: false
+      properties:
+        jc: { type: integer }
+        jmin: { type: integer }
+        jmax: { type: integer }
+        s1: { type: integer }
+        s2: { type: integer }
+        s3: { type: integer }
+        s4: { type: integer }
+        h1: { type: integer }
+        h2: { type: integer }
+        h3: { type: integer }
+        h4: { type: integer }
+        i1: { type: string }
+        i2: { type: string }
+        i3: { type: string }
+        i4: { type: string }
+        i5: { type: string }
+    ReferralSummary:
+      type: object
+      required: [code, invited, converted, pendingBonusDays, grantedBonusDays]
+      properties:
+        code: { type: string }
+        invited: { type: integer, minimum: 0 }
+        converted: { type: integer, minimum: 0 }
+        pendingBonusDays: { type: integer, minimum: 0 }
+        grantedBonusDays: { type: integer, minimum: 0 }

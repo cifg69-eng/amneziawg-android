@@ -213,11 +213,25 @@ class TunnelListFragment : BaseFragment() {
                 if (isUp && sessionStartedAt[item.name] == null) sessionStartedAt[item.name] = now
                 if (!isUp) sessionStartedAt.remove(item.name)
 
-                val bypassCount = try {
-                    item.getConfigAsync().`interface`.excludedApplications.size
+                val currentConfig = try {
+                    item.getConfigAsync()
                 } catch (_: Throwable) {
-                    0
+                    null
                 }
+
+                val bypassCount = currentConfig?.`interface`?.excludedApplications?.size ?: 0
+
+                val endpointOptional = currentConfig
+                    ?.getPeers()
+                    ?.firstOrNull()
+                    ?.getEndpoint()
+
+                val serverEndpoint =
+                    if (endpointOptional != null && endpointOptional.isPresent) {
+                        endpointOptional.get().toString()
+                    } else {
+                        "Не указан"
+                    }
 
                 val accent = requireContext()
                     .getSharedPreferences(PREFS_UI, 0)
@@ -225,7 +239,7 @@ class TunnelListFragment : BaseFragment() {
 
                 view.update(
                     uiState = uiState,
-                    profile = item.name,
+                    serverEndpoint = serverEndpoint,
                     elapsedSeconds = sessionStartedAt[item.name]?.let { (now - it) / 1000L } ?: 0L,
                     bypassCount = bypassCount,
                     accent = accent
