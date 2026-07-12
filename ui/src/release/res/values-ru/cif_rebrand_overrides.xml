@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="create_activity_title">Создание конфигурации Cif VPN</string>
+    <string name="key_length_explanation_base64">: VPN-ключи base64 должны содержать 44 символа (32 байта)</string>
+    <string name="key_length_explanation_binary">: VPN-ключи должны иметь длину 32 байта</string>
+    <string name="key_length_explanation_hex">: HEX-ключи VPN должны содержать 64 символа (32 байта)</string>
+    <string name="log_export_subject">Журнал приложения Cif VPN</string>
+    <string name="permission_description">управлять защищёнными подключениями Cif VPN, включая включение и отключение туннелей</string>
+    <string name="permission_label">управлять подключениями Cif VPN</string>
+    <string name="toggle_error">Ошибка переключения подключения Cif VPN: %s</string>
+    <string name="version_title">Cif VPN v%s</string>
+    <string name="import_disclaimer">Используйте только VPN-конфигурации, полученные из надёжного источника.</string>
+</resources>

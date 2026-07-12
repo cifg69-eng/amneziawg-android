@@ -8,23 +8,23 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.util.TypedValue
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.appcompat.app.ActionBar
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.fragment.app.commit
+import com.google.android.material.appbar.MaterialToolbar
 import org.amnezia.awg.R
 import org.amnezia.awg.fragment.TunnelDetailFragment
 import org.amnezia.awg.fragment.TunnelEditorFragment
 import org.amnezia.awg.model.ObservableTunnel
 
-/** Main application activity. */
+/** Main application activity. The VPN engine is not modified here. */
 class MainActivity : BaseActivity(), FragmentManager.OnBackStackChangedListener {
     private var actionBar: ActionBar? = null
+    private lateinit var toolbar: MaterialToolbar
     private var isTwoPaneLayout = false
     private var backPressedCallback: OnBackPressedCallback? = null
 
@@ -38,39 +38,19 @@ class MainActivity : BaseActivity(), FragmentManager.OnBackStackChangedListener 
         if (backStackEntries == 1) selectedTunnel = null
     }
 
-    private fun resolveActionBarHeight(): Int {
-        val value = TypedValue()
-        if (!theme.resolveAttribute(android.R.attr.actionBarSize, value, true)) return 0
-        return if (value.resourceId != 0) {
-            resources.getDimensionPixelSize(value.resourceId)
-        } else {
-            TypedValue.complexToDimensionPixelSize(value.data, resources.displayMetrics)
-        }
-    }
-
-    private fun setContentTopMargin(topMargin: Int) {
-        val content = findViewById<View>(R.id.detail_container) ?: return
-        val params = content.layoutParams as? ViewGroup.MarginLayoutParams ?: return
-        if (params.topMargin == topMargin) return
-        params.topMargin = topMargin
-        content.layoutParams = params
-    }
-
     override fun onBackStackChanged() {
-        val backStackEntries = supportFragmentManager.backStackEntryCount
-        backPressedCallback?.isEnabled = backStackEntries >= 1
+        val entries = supportFragmentManager.backStackEntryCount
+        backPressedCallback?.isEnabled = entries >= 1
 
-        // The dashboard has its own header. Hiding the native bar removes the duplicate
-        // black "Cif VPN" row and returns its vertical space to the product screen.
-        if (backStackEntries == 0) {
+        if (entries == 0) {
+            // Product dashboard owns its header. GONE means no hidden ActionBar gap.
+            toolbar.visibility = View.GONE
             actionBar?.setDisplayHomeAsUpEnabled(false)
-            actionBar?.hide()
-            setContentTopMargin(0)
         } else {
-            actionBar?.show()
-            setContentTopMargin(resolveActionBarHeight())
-            val minBackStackEntries = if (isTwoPaneLayout) 2 else 1
-            actionBar?.setDisplayHomeAsUpEnabled(backStackEntries >= minBackStackEntries)
+            toolbar.visibility = View.VISIBLE
+            actionBar?.title = getString(R.string.cif_app_name)
+            val minimumEntries = if (isTwoPaneLayout) 2 else 1
+            actionBar?.setDisplayHomeAsUpEnabled(entries >= minimumEntries)
         }
         invalidateOptionsMenu()
     }
@@ -78,7 +58,11 @@ class MainActivity : BaseActivity(), FragmentManager.OnBackStackChangedListener 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+
+        toolbar = findViewById(R.id.main_toolbar)
+        setSupportActionBar(toolbar)
         actionBar = supportActionBar
+
         isTwoPaneLayout = findViewById<View?>(R.id.master_detail_wrapper) != null
         supportFragmentManager.addOnBackStackChangedListener(this)
         backPressedCallback = onBackPressedDispatcher.addCallback(this) { handleBackPressed() }
@@ -121,14 +105,14 @@ class MainActivity : BaseActivity(), FragmentManager.OnBackStackChangedListener 
         val fragmentManager = supportFragmentManager
         if (fragmentManager.isStateSaved) return false
 
-        val backStackEntries = fragmentManager.backStackEntryCount
+        val entries = fragmentManager.backStackEntryCount
         if (newTunnel == null) {
             fragmentManager.popBackStackImmediate(0, FragmentManager.POP_BACK_STACK_INCLUSIVE)
             return true
         }
-        if (backStackEntries == 2) {
+        if (entries == 2) {
             fragmentManager.popBackStackImmediate()
-        } else if (backStackEntries == 0) {
+        } else if (entries == 0) {
             fragmentManager.commit {
                 add(R.id.detail_container, TunnelDetailFragment())
                 setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)

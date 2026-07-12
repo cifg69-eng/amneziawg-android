@@ -7,7 +7,6 @@ package org.amnezia.awg.fragment
 import android.content.pm.PackageManager
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,28 +22,37 @@ import org.amnezia.awg.R
 import org.amnezia.awg.util.resolveAttribute
 
 class AddTunnelsSheet : BottomSheetDialogFragment() {
-
     private var behavior: BottomSheetBehavior<FrameLayout>? = null
+
     private val bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onSlide(bottomSheet: View, slideOffset: Float) {
-        }
+        override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
 
         override fun onStateChanged(bottomSheet: View, newState: Int) {
-            if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
-                dismiss()
-            }
+            if (newState == BottomSheetBehavior.STATE_COLLAPSED) dismiss()
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         if (savedInstanceState != null) dismiss()
         val view = inflater.inflate(R.layout.add_tunnels_bottom_sheet, container, false)
+
         if (activity?.packageManager?.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) != true) {
-            val qrcode = view.findViewById<View>(R.id.create_from_qrcode)
-            qrcode.isEnabled = false
-            qrcode.visibility = View.GONE
+            view.findViewById<View>(R.id.create_from_qrcode)?.apply {
+                isEnabled = false
+                visibility = View.GONE
+            }
         }
-        view.findViewById<TextView>(R.id.disclaimer)?.let { it.movementMethod = LinkMovementMethod.getInstance() }
+
+        // Override the upstream text directly so no old provider name or URL can appear.
+        view.findViewById<TextView>(R.id.disclaimer)?.apply {
+            text = getString(R.string.cif_import_disclaimer)
+            movementMethod = null
+            linksClickable = false
+        }
         return view
     }
 
@@ -62,39 +70,36 @@ class AddTunnelsSheet : BottomSheetDialogFragment() {
                 }
                 dialog.findViewById<View>(R.id.create_empty)?.setOnClickListener {
                     dismiss()
-                    onRequestCreateConfig()
+                    setFragmentResult(
+                        REQUEST_KEY_NEW_TUNNEL,
+                        bundleOf(REQUEST_METHOD to REQUEST_CREATE)
+                    )
                 }
                 dialog.findViewById<View>(R.id.create_from_file)?.setOnClickListener {
                     dismiss()
-                    onRequestImportConfig()
+                    setFragmentResult(
+                        REQUEST_KEY_NEW_TUNNEL,
+                        bundleOf(REQUEST_METHOD to REQUEST_IMPORT)
+                    )
                 }
                 dialog.findViewById<View>(R.id.create_from_qrcode)?.setOnClickListener {
                     dismiss()
-                    onRequestScanQRCode()
+                    setFragmentResult(
+                        REQUEST_KEY_NEW_TUNNEL,
+                        bundleOf(REQUEST_METHOD to REQUEST_SCAN)
+                    )
                 }
             }
         })
-        val gradientDrawable = GradientDrawable().apply {
+
+        view.background = GradientDrawable().apply {
             setColor(requireContext().resolveAttribute(com.google.android.material.R.attr.colorSurface))
         }
-        view.background = gradientDrawable
     }
 
     override fun dismiss() {
         super.dismiss()
         behavior?.removeBottomSheetCallback(bottomSheetCallback)
-    }
-
-    private fun onRequestCreateConfig() {
-        setFragmentResult(REQUEST_KEY_NEW_TUNNEL, bundleOf(REQUEST_METHOD to REQUEST_CREATE))
-    }
-
-    private fun onRequestImportConfig() {
-        setFragmentResult(REQUEST_KEY_NEW_TUNNEL, bundleOf(REQUEST_METHOD to REQUEST_IMPORT))
-    }
-
-    private fun onRequestScanQRCode() {
-        setFragmentResult(REQUEST_KEY_NEW_TUNNEL, bundleOf(REQUEST_METHOD to REQUEST_SCAN))
     }
 
     companion object {

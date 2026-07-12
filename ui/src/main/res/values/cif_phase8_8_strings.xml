@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cif_import_disclaimer">Use only VPN configurations received from a trusted source.</string>
+    <string name="cif_version_title">Cif VPN %1$s</string>
+    <string name="cif_version_summary">Private and secure VPN connection</string>
+    <string name="cif_settings_title">Cif VPN settings</string>
+    <string name="cif_create_activity_title">Create Cif VPN configuration</string>
+    <string name="cif_permission_label">Control Cif VPN connections</string>
+    <string name="cif_permission_description">Allows trusted automation to enable and disable Cif VPN connections.</string>
+</resources>

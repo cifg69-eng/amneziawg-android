@@ -30,9 +30,9 @@
 
     <permission
         android:name="${applicationId}.permission.CONTROL_TUNNELS"
-        android:description="@string/permission_description"
+        android:description="@string/cif_permission_description"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/permission_label"
+        android:label="@string/cif_permission_label"
         android:protectionLevel="dangerous" />
 
     <application
@@ -79,12 +79,13 @@
 
         <activity
             android:name=".activity.SettingsActivity"
-            android:label="@string/settings"
+            android:label="@string/cif_settings_title"
+            android:theme="@style/CifSettingsTheme"
             android:parentActivityName=".activity.MainActivity" />
 
         <activity
             android:name=".activity.TunnelCreatorActivity"
-            android:label="@string/create_activity_title"
+            android:label="@string/cif_create_activity_title"
             android:parentActivityName=".activity.MainActivity" />
 
         <activity

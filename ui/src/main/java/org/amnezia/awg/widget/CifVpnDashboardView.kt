@@ -39,7 +39,7 @@ class CifVpnDashboardView @JvmOverloads constructor(
     }
     private val brandPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val brandLogo: Bitmap by lazy {
-        BitmapFactory.decodeResource(resources, R.drawable.cif_brand_logo)
+        BitmapFactory.decodeResource(resources, R.drawable.cif_logo_mono)
     }
 
     private var state = UiState.OFF
@@ -105,7 +105,7 @@ class CifVpnDashboardView @JvmOverloads constructor(
         val measuredWidth = MeasureSpec.getSize(widthMeasureSpec).takeIf { it > 0 }
             ?: resources.displayMetrics.widthPixels
         val circleSize = min(measuredWidth.toFloat() - dp(76f), dp(310f)).coerceAtLeast(dp(220f))
-        val desiredHeight = (dp(20f + 58f + 105f + 20f + 94f + 126f + 30f) + circleSize).toInt()
+        val desiredHeight = (dp(20f + 58f + 105f + 20f + 94f + 126f + 46f) + circleSize).toInt()
         val width = resolveSize(measuredWidth, widthMeasureSpec)
         val height = when (MeasureSpec.getMode(heightMeasureSpec)) {
             MeasureSpec.EXACTLY -> maxOf(MeasureSpec.getSize(heightMeasureSpec), desiredHeight)
@@ -296,10 +296,14 @@ class CifVpnDashboardView @JvmOverloads constructor(
     private fun drawServerCard(canvas: Canvas, left: Float, top: Float, right: Float, bottom: Float) {
         val rect = RectF(left, top, right, bottom)
         drawGlassCard(canvas, rect, dp(20f))
-        drawBrandLogo(
-            canvas,
-            RectF(left + dp(14f), top + dp(14f), left + dp(62f), bottom - dp(14f))
+        paint.color = withAlpha(accentColor, 30)
+        canvas.drawRoundRect(
+            RectF(left + dp(15f), top + dp(15f), left + dp(59f), bottom - dp(15f)),
+            dp(13f),
+            dp(13f),
+            paint
         )
+        drawServerNodeIcon(canvas, left + dp(37f), (top + bottom) / 2f, accentColor)
 
         paint.textAlign = Paint.Align.LEFT
         paint.typeface = Typeface.DEFAULT
@@ -336,8 +340,28 @@ class CifVpnDashboardView @JvmOverloads constructor(
 
     private fun drawBrandLogo(canvas: Canvas, destination: RectF, alpha: Int = 255) {
         brandPaint.alpha = alpha.coerceIn(0, 255)
+        brandPaint.colorFilter = PorterDuffColorFilter(accentColor, PorterDuff.Mode.SRC_IN)
         canvas.drawBitmap(brandLogo, null, destination, brandPaint)
+        brandPaint.colorFilter = null
         brandPaint.alpha = 255
+    }
+
+    private fun drawServerNodeIcon(canvas: Canvas, cx: Float, cy: Float, color: Int) {
+        stroke.color = color
+        stroke.strokeWidth = dp(2.4f)
+        val width = dp(22f)
+        val height = dp(7f)
+        for (i in -1..1) {
+            val y = cy + i * dp(9f)
+            canvas.drawRoundRect(
+                RectF(cx - width / 2f, y - height / 2f, cx + width / 2f, y + height / 2f),
+                dp(3f),
+                dp(3f),
+                stroke
+            )
+            paint.color = color
+            canvas.drawCircle(cx + dp(6f), y, dp(1.8f), paint)
+        }
     }
 
     private fun drawGlassCard(canvas: Canvas, rect: RectF, radius: Float) {

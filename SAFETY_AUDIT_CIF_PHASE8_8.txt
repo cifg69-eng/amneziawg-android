@@ -1,0 +1,11 @@
+STATIC CHECKS
+
+[OK] MainActivity theme is NoActionBar
+[OK] Main toolbar is GONE on dashboard and VISIBLE in detail/editor
+[OK] No fixed 770dp product-row height
+[OK] CifVpnDashboardView keeps hardware acceleration
+[OK] AppCompat parent retained for Android 12+
+[OK] Import disclaimer is overwritten at runtime
+[OK] Settings VersionPreference has no old URL
+[OK] Version shown without -debug suffix
+[OK] No tunnel/ engine source file included

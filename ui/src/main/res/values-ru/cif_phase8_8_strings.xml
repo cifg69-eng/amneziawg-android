@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cif_import_disclaimer">Используйте только VPN-конфигурации, полученные из надёжного источника.</string>
+    <string name="cif_version_title">Cif VPN %1$s</string>
+    <string name="cif_version_summary">Приватное и защищённое VPN-подключение</string>
+    <string name="cif_settings_title">Настройки Cif VPN</string>
+    <string name="cif_create_activity_title">Создание конфигурации Cif VPN</string>
+    <string name="cif_permission_label">Управление подключениями Cif VPN</string>
+    <string name="cif_permission_description">Разрешает доверенной автоматизации включать и отключать подключения Cif VPN.</string>
+</resources>
