@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="CifMainTheme">
+    <style name="CifMainTheme" parent="AppTheme">
+        <!-- Preserve the Phase 8.6 fix: hidden ActionBar does not reserve a black strip. -->
+        <item name="windowActionBarOverlay">true</item>
+
+        <!-- Keep the branded launch background and dark system bars. -->
+        <item name="android:windowBackground">@drawable/cif_launch_screen</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Android 12+ splash screen. -->
         <item name="android:windowSplashScreenBackground">@color/cif_brand_background</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
         <item name="android:windowSplashScreenIconBackgroundColor">@color/cif_brand_background</item>
