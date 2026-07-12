@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Cif VPN</string>
     <string name="create_activity_title">Create Cif VPN configuration</string>
     <string name="key_length_explanation_base64">: VPN base64 keys must be 44 characters (32 bytes)</string>
     <string name="key_length_explanation_binary">: VPN keys must be 32 bytes</string>
